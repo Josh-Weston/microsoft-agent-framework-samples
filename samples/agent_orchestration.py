@@ -16,7 +16,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 if True:
-    from agent_framework import tool, Agent, Message, WorkflowEvent
+    from agent_framework import tool, Agent, Message
     from agent_framework.orchestrations import SequentialBuilder
     from agent_framework.openai import OpenAIChatClient
     from agent_framework.observability import configure_otel_providers
@@ -85,6 +85,8 @@ async def sequential_orchestration():
     outputs: list[list[Message]] = []
     workflow = SequentialBuilder(
         participants=[tool_calling_agent, structured_output_agent]).build()
+
+    # Note: this waits until the workflow is complete before yielding any events
     async for event in workflow.run("What is the weather in Halifax, Nova Scotia?", stream=True):
         if event.type == "output":
             outputs.append(cast(list[Message], event.data))

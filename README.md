@@ -163,6 +163,8 @@ https://learn.microsoft.com/en-us/agent-framework/agents/observability?pivots=pr
 
 Agent Framework emits traces, logs, and metrics according to the [OpenTelemetry GenAI Semantic Conventions](https://opentelemetry.io/docs/specs/semconv/gen-ai/)
 
+Example for how to setup manual observability: https://github.com/microsoft/agent-framework/blob/main/python/samples/02-agents/observability/advanced_manual_setup_console_output.py
+
 ## Enable Console Logging
 
 #### Option 1 (easiest): Inline export
@@ -194,3 +196,18 @@ if True:
     # Console exporters are enabled via the ENABLE_CONSOLE_EXPORTERS env var
     configure_otel_providers()
 ```
+
+## Captured Spans
+
+- invoke_agent <agent_name>: This is the top level span for each agent invocation, it will contain all other spans as children.
+- chat <model_name>: This span is created when the agent calls the underlying chat model, it will contain the prompt and response as attributes, if enable_sensitive_data is set to True.
+- execute_tool <function_name>: This span is created when the agent calls a function tool, it will contain the function arguments and result as attributes, if enable_sensitive_data is set to True.
+
+## Captured Metrics
+
+- For the chat client and chat operations:
+  - **gen_ai.client.operation.duration (histogram)**: This metric measures the duration of each operation, in seconds.
+  - **gen_ai.client.token.usage (histogram)**: This metric measures the token usage, in number of tokens.
+
+- For function invocation during the execute_tool operations:
+  - **agent_framework.function.invocation.duration (histogram)**: This metric measures the duration of each function execution, in seconds.
