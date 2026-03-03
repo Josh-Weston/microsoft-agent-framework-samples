@@ -211,3 +211,17 @@ if True:
 
 - For function invocation during the execute_tool operations:
   - **agent_framework.function.invocation.duration (histogram)**: This metric measures the duration of each function execution, in seconds.
+
+# Agent Types
+
+| Pattern                                 | Coordination                                                      | Routing                                              | Best for                                                                     | Watch out for                                                            |
+| :-------------------------------------- | :---------------------------------------------------------------- | :--------------------------------------------------- | :--------------------------------------------------------------------------- | :----------------------------------------------------------------------- |
+| [Sequential](#sequential-orchestration) | Linear pipeline; each agent processes the previous agent's output | Deterministic, predefined order                      | Step-by-step refinement with clear stage dependencies                        | Failures in early stages propagate; no parallelism                       |
+| [Concurrent](#concurrent-orchestration) | Parallel; agents work independently on the same input             | Deterministic or dynamic agent selection             | Independent analysis from multiple perspectives; latency-sensitive scenarios | Requires conflict resolution when results contradict; resource-intensive |
+| [Group chat](#group-chat-orchestration) | Conversational; agents contribute to a shared thread              | Chat manager controls turn order                     | Consensus-building, brainstorming, iterative maker-checker validation        | Conversation loops; difficult to control with many agents                |
+| [Handoff](#handoff-orchestration)       | Dynamic delegation; one active agent at a time                    | Agents decide when to transfer control               | Tasks where the right specialist emerges during processing                   | Infinite handoff loops; unpredictable routing paths                      |
+| [Magentic](#magentic-orchestration)     | Plan-build-execute; manager agent builds and adapts a task ledger | Manager agent assigns and reorders tasks dynamically | Open-ended problems with no predetermined solution path                      | Slow to converge; stalls on ambiguous goals                              |
+
+# Skills
+
+https://learn.microsoft.com/en-us/agent-framework/agents/skills?pivots=programming-language-python

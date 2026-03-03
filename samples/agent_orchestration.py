@@ -100,7 +100,3 @@ async def sequential_orchestration():
 
 if __name__ == "__main__":
     asyncio.run(sequential_orchestration())
-
-
-# LEFT-OFF: reconciling expected spans/metrics/traces from the MSFT documentation to what I am seeing
-# LEFT-OFF: simplifying the code be removing unnecessary traces
