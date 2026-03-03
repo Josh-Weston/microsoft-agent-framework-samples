@@ -7,9 +7,9 @@ from opentelemetry.sdk.trace import ReadableSpan, SpanProcessor, TracerProvider
 # from opentelemetry.sdk.trace.export import SimpleSpanProcessor, SpanExporter
 
 # Metric imports
-from opentelemetry.metrics import set_meter_provider, get_meter, get_meter_provider
+from opentelemetry.metrics import set_meter_provider, get_meter_provider
 from opentelemetry.sdk.metrics import MeterProvider
-from opentelemetry.sdk.metrics.export import MetricExporter, MetricExportResult, PeriodicExportingMetricReader, MetricsData, NumberDataPoint, HistogramDataPoint
+from opentelemetry.sdk.metrics.export import MetricExporter, MetricExportResult, PeriodicExportingMetricReader, MetricsData, NumberDataPoint, HistogramDataPoint, InMemoryMetricReader
 
 # Resource Imports
 from opentelemetry.sdk.resources import Resource
@@ -67,6 +67,26 @@ def setup_tracing(queue: asyncio.Queue[tuple[str, ReadableSpan]], loop: asyncio.
 # METRICS IMPLEMENTATION
 # ---------------------------------------------------------
 
+async def metric_poller(reader: InMemoryMetricReader, queue: asyncio.Queue[MetricsData]):
+    """
+    Native asyncio task that pulls metrics on demand and pushes them to the queue.
+    """
+    try:
+        while True:
+            # Check every 5 seconds
+            await asyncio.sleep(5)
+
+            # Synchronously pull the latest metrics data from the reader
+            metrics_data = reader.get_metrics_data()
+            
+            if metrics_data:
+                await queue.put(metrics_data)
+                
+    except asyncio.CancelledError:
+        # When cancelled, do one final pull to guarantee nothing is left behind
+        final_metrics = reader.get_metrics_data()
+        if final_metrics:
+            await queue.put(final_metrics)
 
 class IPCMetricExporter(MetricExporter):
     """
@@ -93,6 +113,11 @@ class IPCMetricExporter(MetricExporter):
     def force_flush(self, timeout_millis: float = 30_000, **kwargs) -> bool:
         return True
 
+
+
+def setup_metrics_reader(memory_reader: InMemoryMetricReader):
+    meter_provider = MeterProvider(resource=resource, metric_readers=[memory_reader])
+    set_meter_provider(meter_provider)
 
 def setup_metrics(queue: asyncio.Queue[tuple[str, MetricsData]], loop: asyncio.AbstractEventLoop):
     exporter = IPCMetricExporter(queue, loop)
@@ -151,21 +176,21 @@ async def span_consumer(queue: asyncio.Queue[tuple[str, ReadableSpan]]):
 
             # Send through IPC
             json_line = json.dumps(payload)
-            # print(json_line, flush=True)
+            print(json_line, flush=True)
             queue.task_done()
 
     except asyncio.CancelledError:
         pass
 
 
-async def metrics_consumer(queue: asyncio.Queue[tuple[str, MetricsData]]):
+async def metrics_consumer(queue: asyncio.Queue[MetricsData]):
     """
     Reads real-time metric events, serializes them to standard JSON Lines,
-    and prints them to stdout so the Golang parent process can read them.
+    and prints them to stdout so the IPC parent parent process can read them.
     """
     try:
         while True:
-            event_type, metrics_data = await queue.get()
+            metrics_data = await queue.get()
             print(metrics_data)
             for resource_metric in metrics_data.resource_metrics:
                 resource_attrs = dict(
@@ -189,6 +214,7 @@ async def metrics_consumer(queue: asyncio.Queue[tuple[str, MetricsData]]):
                                 payload["sum"] = data_point.sum
                                 payload["count"] = data_point.count
                             print(json.dumps(payload), flush=True)
+            queue.task_done()
     except asyncio.CancelledError:
         pass
 
@@ -199,16 +225,22 @@ async def main():
 
     # Create the communication queue
     span_queue = asyncio.Queue[tuple[str, ReadableSpan]]()
-    metrics_queue = asyncio.Queue[tuple[str, MetricsData]]()
+    metrics_queue = asyncio.Queue[MetricsData]()
 
-    # Pass the queue and loop into the setup
+    # Setup tracing
     setup_tracing(span_queue, loop)
-    setup_metrics(metrics_queue, loop)
+
+    # Setup metrics with an in-memory reader for on-demand polling
+    memory_reader = InMemoryMetricReader()
+    setup_metrics_reader(memory_reader)
     enable_instrumentation()
 
     # Start the background consumer tasks
     span_task = asyncio.create_task(span_consumer(span_queue))
     metrics_task = asyncio.create_task(metrics_consumer(metrics_queue))
+
+    # Spin-up metrics poller
+    poller_task = asyncio.create_task(metric_poller(memory_reader, metrics_queue))
 
     try:
         # Run the actual application logic
@@ -220,9 +252,9 @@ async def main():
         if isinstance(trace_provider, TracerProvider):
             trace_provider.shutdown()
 
-        meter_provider = get_meter_provider()
-        if isinstance(meter_provider, MeterProvider):
-            meter_provider.shutdown()
+        # Cancel the poller and wait for it to finish to ensure all metrics are flushed
+        poller_task.cancel()
+        await asyncio.gather(poller_task, return_exceptions=True)
 
         await span_queue.join()
         await metrics_queue.join()
@@ -235,8 +267,3 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
-
-
-# LEFT-OFF: potentially adding await aysncio.to_thread(trace_provider.shutdown) to free-up the main thread to process the metrics payload
-# LEFT-OFF: OTEL runs background tasks that "wakeup" every 5 seconds to produce metrics, this is why it is not as easy as just awaiting the orchestrator
-# LEFT-OFF: Is there another way other than asyncio.to_thread to "flush" the metrics?
