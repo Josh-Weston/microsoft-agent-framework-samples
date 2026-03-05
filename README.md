@@ -206,11 +206,11 @@ if True:
 ## Captured Metrics
 
 - For the chat client and chat operations:
-  - **gen_ai.client.operation.duration (histogram)**: This metric measures the duration of each operation, in seconds.
-  - **gen_ai.client.token.usage (histogram)**: This metric measures the token usage, in number of tokens.
+    - **gen_ai.client.operation.duration (histogram)**: This metric measures the duration of each operation, in seconds.
+    - **gen_ai.client.token.usage (histogram)**: This metric measures the token usage, in number of tokens.
 
 - For function invocation during the execute_tool operations:
-  - **agent_framework.function.invocation.duration (histogram)**: This metric measures the duration of each function execution, in seconds.
+    - **agent_framework.function.invocation.duration (histogram)**: This metric measures the duration of each function execution, in seconds.
 
 # Agent Types
 
@@ -225,3 +225,9 @@ if True:
 # Skills
 
 https://learn.microsoft.com/en-us/agent-framework/agents/skills?pivots=programming-language-python
+
+MAF follows the Agent Skills: https://agentskills.io/home
+
+**Note**: MAF Skills is only designed to read text-based files (e.g., `.md | .txt | .py`). The code does not specify any particular file format, but it will only read files with `encoding="utf-8"`.
+
+The skills are processed **before** your agent can use any of its tools.

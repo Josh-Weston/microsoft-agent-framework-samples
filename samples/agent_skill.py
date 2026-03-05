@@ -1,5 +1,6 @@
 import asyncio
 import os
+from pathlib import Path
 from typing import Annotated, cast
 from pydantic import BaseModel, ConfigDict, Field
 from dotenv import load_dotenv
@@ -29,26 +30,32 @@ You are a highly capable AI assistant designed to help users efficiently complet
 You have access to a variety of specialized skills. Before attempting to solve a user's request from your own knowledge, always check if you have a relevant skill in your toolkit.
 
 Always review the SKILL.md file of a selected skill to understand the required workflow before taking action.
+
+Only use the information provided in the SKILL.md file and the resources within the skill's references and assets folders to complete the task. Do not use any outside knowledge or information. Do not infer or assume any information that is not explicitly provided in the skill's resources.
 """
+
+    skills_provider = FileAgentSkillsProvider(
+        skill_paths=Path(__file__).parent / "skills"
+    )
+
+    print(Path(__file__).parent / "skills")
 
     skills_agent = Agent(
         client=chat_client,
         instructions=agent_instructions,
-        context_providers=[FileAgentSkillsProvider(
-            skill_paths="samples/skills/")],
+        context_providers=[skills_provider],
         tools=[extract_text_from_pdf],
         default_options={
-            "model_id": "openai/gpt-oss-20b:fireworks-ai",
+            # "model_id": "openai/gpt-oss-20b:fireworks-ai",
+            "model_id": "openai/gpt-oss-120b:cerebras",
         },
     )
 
     result = await skills_agent.run(
-        "Create a blog post from the product_summary in your skills folder")
+        "Create a blog post using the template and information found in your skills directory. Follow the instructions in the SKILL.md file exactly. Ensure any mentions of Artificial Intelligence are added to a separate section.")
 
-    with open("blog_post.md", "w") as f:
+    with open("blog_post.md", "w", encoding="utf-8") as f:
         f.write(str(result))
 
 if __name__ == "__main__":
     asyncio.run(skills_example())
-
-# LEFT-OFF: The blog_post_template.md file and the SKILL.md file are not being used at all...
