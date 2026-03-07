@@ -1,13 +1,3 @@
-"""
-Structured output does not work with:
-
-- openai/gpt-oss-120b
-- Qwen/Qwen3.5-397B-A17B:together
-
-Structured output does work with:
-
-"""
-
 import asyncio
 import os
 from typing import Annotated, cast

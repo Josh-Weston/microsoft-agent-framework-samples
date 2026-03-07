@@ -1,10 +1,9 @@
 import asyncio
 import os
 from pathlib import Path
-from typing import Annotated, cast
-from pydantic import BaseModel, ConfigDict, Field
 from dotenv import load_dotenv
 from tools.pdf import extract_text_from_pdf
+from tools.submit_blog_post import submit_blog_post
 load_dotenv()
 
 if True:
@@ -44,18 +43,17 @@ Only use the information provided in the SKILL.md file and the resources within 
         client=chat_client,
         instructions=agent_instructions,
         context_providers=[skills_provider],
-        tools=[extract_text_from_pdf],
+        tools=[extract_text_from_pdf, submit_blog_post],
         default_options={
-            # "model_id": "openai/gpt-oss-20b:fireworks-ai",
             "model_id": "openai/gpt-oss-120b:cerebras",
         },
     )
 
-    result = await skills_agent.run(
-        "Create a blog post using the template and information found in your skills directory. Follow the instructions in the SKILL.md file exactly. Ensure any mentions of Artificial Intelligence are added to a separate section.")
+    response = await skills_agent.run(
+        "Create a blog post using the template and information found in your skills directory. Follow the instructions in the SKILL.md file exactly. Ensure any mentions of Artificial Intelligence are added to a separate section. YOU MUST call the submit_blog_post tool with the final content - do not return the blog post content directly to me. Once you have successfully submitted the blog post using the submit_blog_post tool, report back that it was submitted successfully."
+    )
 
-    with open("blog_post.md", "w", encoding="utf-8") as f:
-        f.write(str(result))
+    print(f"Agent response: {response}")
 
 if __name__ == "__main__":
     asyncio.run(skills_example())
