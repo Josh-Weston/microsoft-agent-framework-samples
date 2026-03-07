@@ -119,6 +119,11 @@ class WeatherInfo(BaseModel):
 - Converts to a `str` type when using `model_json_schema`
 - Converts back to a `float` when converting the structured output
 
+# MAF Classes Information
+
+`OpenAIChatClient`: traditional way to build agents, focusing on stateless message-by-message interactions. Local MCP tools only.
+`OpenAIResponsesClient`: the newer OpenAI Responses API for more complex agentic behaviours. Includes code interpreter, full support for reasoning models, file search, etc. Local and hosted MCP support.
+
 # Hugging Face Inference Endpoints
 
 The `https://router.huggingface.co/v1` endpoint provides an abstraction so your code doesn't need to change when you choose a new inference provider.
@@ -154,7 +159,17 @@ TODO: How to provide HITL responses back to the LLM?
 https://learn.microsoft.com/en-us/agent-framework/workflows/workflows?pivots=programming-language-python
 https://learn.microsoft.com/en-us/agent-framework/workflows/as-agents?pivots=programming-language-python
 
-TODO: How to create and use workflows
+Samples:
+
+https://github.com/microsoft/agent-framework/tree/main/python/samples/03-workflows
+
+**Executors**: represent individual processing units within a workflow. They can be AI agents or custom logic components. They receive input messages, perform specific tasks, and produce output messages.
+
+**Edges**: define the connections between executors, determining the flow of messages. They can include conditions to control routing based on message contents.
+
+**Events**: provide observability into workflow execution, including lifecycle events, executor events, and custom events.
+
+**Workflow Builder & Execution**: ties executors and edges together into a directed graph, manages execution via supersteps, and supports streaming and non-streaming modes.
 
 # MAF Custom Agent
 
@@ -167,6 +182,12 @@ https://learn.microsoft.com/en-us/agent-framework/agents/observability?pivots=pr
 Agent Framework emits traces, logs, and metrics according to the [OpenTelemetry GenAI Semantic Conventions](https://opentelemetry.io/docs/specs/semconv/gen-ai/)
 
 Example for how to setup manual observability: https://github.com/microsoft/agent-framework/blob/main/python/samples/02-agents/observability/advanced_manual_setup_console_output.py
+
+# MAF MCP Server Access
+
+TODO: determine how MAF can use MCP servers
+
+https://github.com/microsoft/agent-framework/tree/main/python/samples/02-agents/mcp
 
 ## Enable Console Logging
 

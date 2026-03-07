@@ -6,6 +6,7 @@ readme = "README.md"
 requires-python = ">=3.13.5"
 dependencies = [
     "agent-framework>=1.0.0rc2",
+    "httpx>=0.28.1",
     "opentelemetry-api>=1.39.1",
     "opentelemetry-sdk>=1.39.1",
     "pypdf>=6.7.5",

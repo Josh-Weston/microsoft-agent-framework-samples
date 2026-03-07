@@ -1,7 +1,7 @@
 """
 Sequentially have one agent create a blog post using a skill and have another submit it using a tool
-
 """
+
 from agent_framework.orchestrations import SequentialBuilder
 from agent_framework.observability import configure_otel_providers
 from agent_framework.openai import OpenAIChatClient
@@ -87,6 +87,7 @@ Use the submit_blog_post tool to post the blog post created by the writer agent.
     # Note: each message contains a contents property with unique content (e.g., funciton_call, function_result)
     # Note: "tool" is also a role (it returns function_result messages with the output of the tool call) ({'type': 'message', 'role': 'tool', 'contents': [{'type': 'function_result', 'call_id': 'ef2a15916', 'result': ...}]})
     # Note: this is why there are so many calls and outputs for the agents are calling tools - each tool call results in an extra message with the tool output
+    # Note: in Microsoft's example, they use outputs: list[AgentResponse] = events.get_outputs() and each AgentResponse contains a list of messages from that agent; however, this doesn't work for all messages in my testing.
     msg: list[Message] = events.get_outputs()[0]
     for m in msg:
         print(f"{m.to_dict()}\n\n")
