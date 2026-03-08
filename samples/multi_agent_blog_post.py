@@ -11,7 +11,6 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 from tools.submit_blog_post import submit_blog_post
-from collections.abc import Iterable
 load_dotenv()
 
 configure_otel_providers()
@@ -82,24 +81,21 @@ Use the submit_blog_post tool to post the blog post created by the writer agent.
 
     # Message Class: https://learn.microsoft.com/en-us/python/api/agent-framework-core/agent_framework.chatmessage?view=agent-framework-python-latest
 
-    # Note: get_outputs() returns a nested list; however, all outputs for all agents are in the first list
-    # Note: there are extra messages sent to the agent without a response; I am not sure what they are for (polling perhaps?)
     # Note: each message contains a contents property with unique content (e.g., funciton_call, function_result)
     # Note: "tool" is also a role (it returns function_result messages with the output of the tool call) ({'type': 'message', 'role': 'tool', 'contents': [{'type': 'function_result', 'call_id': 'ef2a15916', 'result': ...}]})
     # Note: this is why there are so many calls and outputs for the agents are calling tools - each tool call results in an extra message with the tool output
-    # Note: in Microsoft's example, they use outputs: list[AgentResponse] = events.get_outputs() and each AgentResponse contains a list of messages from that agent; however, this doesn't work for all messages in my testing.
-    msg: list[Message] = events.get_outputs()[0]
-    for m in msg:
-        print(f"{m.to_dict()}\n\n")
-        # name = m.author_name or (
-        #     "assistant" if m.role == "assistant" else "user")
-        # print(f"{'-' * 60}\n[{name}]\n{m.text}")
+    # Note: since we are using an orchestration abstraction (SequentialBuilder), the output of one agent is passed as input to the next agent, so we get all the intermediate messages (not AgentExecutorRespons) in the workflow outputs
+    outputs = events.get_outputs()[0]
+    messages = [m for m in outputs if isinstance(m, Message)]
+    print(f"Total messages: {len(messages)}")
+    non_messages = [o for o in outputs if not isinstance(o, Message)]
+    print(f"Total non-message outputs: {len(non_messages)}")
 
-    # Get the last message which should be the final response from the poster agent after submitting the blog post
-    # msg: Message = events.get_outputs()[0][-1]
-    # name = msg.author_name or (
-    #     "assistant" if msg.role == "assistant" else "user")
-    # print(f"{'-' * 60}\n[{name}]\n{msg.text}")
+    for m in messages:
+        print(f"{m.to_dict()}\n\n")
+        name = m.author_name or (
+            "assistant" if m.role == "assistant" else "user")
+        print(f"{'-' * 60}\n[{name}]\n{m.text}")
 
 if __name__ == "__main__":
     asyncio.run(skills_example())

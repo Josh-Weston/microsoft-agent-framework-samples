@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional, List, Dict, Any
+from typing import Optional, Any
 from datetime import datetime
 
 
@@ -16,11 +16,11 @@ class SpanStatus(BaseModel):
 class SpanEvent(BaseModel):
     name: str
     timestamp: datetime  # Pydantic automatically parses the ISO 8601 string!
-    attributes: Dict[str, Any]
+    attributes: dict[str, Any]
 
 
 class SpanResource(BaseModel):
-    attributes: Dict[str, Any]
+    attributes: dict[str, Any]
     schema_url: str
 
 
@@ -32,7 +32,7 @@ class OpenTelemetrySpan(BaseModel):
     start_time: datetime
     end_time: datetime
     status: SpanStatus
-    attributes: Dict[str, Any]
-    events: List[SpanEvent]
-    links: list
+    attributes: dict[str, Any]
+    events: list[SpanEvent]
+    links: list[str]
     resource: SpanResource

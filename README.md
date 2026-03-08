@@ -119,10 +119,86 @@ class WeatherInfo(BaseModel):
 - Converts to a `str` type when using `model_json_schema`
 - Converts back to a `float` when converting the structured output
 
-# MAF Classes Information
+# MAF Class and Function Information
 
 `OpenAIChatClient`: traditional way to build agents, focusing on stateless message-by-message interactions. Local MCP tools only.
 `OpenAIResponsesClient`: the newer OpenAI Responses API for more complex agentic behaviours. Includes code interpreter, full support for reasoning models, file search, etc. Local and hosted MCP support.
+
+#### `ctx.WorkflowContext[send_message_type, yield_output_type]`
+
+- The first parameter is the type for `ctx.send_message`
+- The second parameter is the type for `ctx.yield_output`
+
+`WorkflowContext[str]`: the executor will only use `ctx.send_message` and it will send a `str` type
+`WorkflowContext[Never, str]`: the executor will only use `ctx.yield_output` and it will send a `str` type
+`WorkflowContext[str, int]`: the executor will use `ctx.send_message` (with `str`) and `ctx.yield_output` (with `int`)
+
+#### `ctx. send_message()`: Talking to the Graph
+
+**Purpose:** To pass data to the next step in your workflow.
+
+**Who receives it:** Other downstream executors (agents or functions) connected to this node via edges.
+
+**When to use it:** When your executor has finished its specific chunk of work and needs to hand intermediate results over to the next participant in the pipeline.
+
+**What can you send:** Can send any type so long as it matches the `WorkflowContext` you have provided as the second argument to your executor
+
+#### `ctx.yield_output()`: Talking to the Caller
+
+**Purpose:** To emit data as a workflow-level result.
+
+**Who receives it:** The external application or script that initially triggered the execution using workflow.run() or workflow.run_stream().
+
+**When to use it:** When the workflow has reached a conclusion (or found a crucial piece of data) and needs to hand the final answer back out to you, the developer. It does not pass data to other executors.
+
+**What can you send:** Can yield any type so long as it matches the `WorkflowContext` you have provided as the second argument to your executor
+
+**Note:** Calling `ctx.yield_output` does not halt the executor, nor does it terminate the workflow. Your execuor will continue running the rest of the codes. The workflow only ends when all currently running executors have finished executing their code and there are no more pending messages waiting to be sent across the edges to downstream executors.
+
+#### How outputs are handled
+
+**`await workflow.run()`:** The framework waits for the entire workflow to finish and gathers all of the yields into the final outputs object
+**`await workflow.run_stream()`:** The framework emits the outputs as they are received
+
+**Note:** Agents in a `WorkflowBuilder` pipeline will always call `yield_output` with an `AgentResponse` in addition to passing the message downstream
+**Note:** Agents in an `Orchestration (e.g., SequentialBuilder)` do not yield `AgentResponse`s, instead they yield all of their messages. It automatically synchronizes a single,shared conversation thread across all participants.
+
+#### AgentExecutorResponse
+
+**Note:** Executors downstream from an `Agent` need to receive the `AgentExecutorResponse` as their first argument: `async def final_executor(response: AgentExecutorResponse, ctx: WorkflowContext[Never, list[Message] | None])`
+
+The `AgentExecutorResponse` can be used to get all of the collected messages during the workflow's execution so it can be yielded to the output if need.
+
+`clean_messages = response.full_conversation`
+`await ctx.yield_output(clean_messages)`
+
+The `AgentExecutorResponse` is a workflow wrapper around `AgentResponse`. It takes the `AgentResponse` and bundles it with extra state information needed by the workflow.
+
+#### AgentResponse
+
+The `AgentResponse` is generated automatically when using an agent in a `WorkflowBuilder`. When a downstream executor receives the `AgentExecutorResponse` the framework receives the `AgentResponse` for its outputs.
+
+When data flows through a low-level WorkflowBuilder:
+
+1. The upstream node sends a `str` to the agent's node.
+2. The `AgentExecutor` receives the `str` and feeds it to the internal Agent.
+3. the Agent talks to the LLM and produces an `AgentResponse`.
+4. The `AgentExecutor` catches that `AgentResponse`, packages it along with the conversation history into an `AgentExecutorResponse`, and sends that across the edge to the next executor.
+
+**Note:** `AgentResponse` implements the `__str__` method, so using `print(some_agent_response)` will automatically unpack all of its `messages`, append them, and return it for printing.
+
+### `get_outputs`
+
+- `get_outputs` is always a `list`
+- If you use an orchestration abstraction (e.g., `SequentialBuilder`) then it will contain a single item: `list[Message]`
+- If you use `WorkflowBuilder` it will contain multiple items: one for each `AgentResponse` and one for each time you call `yield_output`
+- It is best to "unpack" the `get_outputs` to determine the types you are dealing with (e.g., a `list` and each element is `Messagee`)
+
+### Message Type
+
+- `Message` contains `contents` of type `list[Content]`
+- The `Content` type is a unified type for handling many different content types
+- `msg.text` loops through each `Content` item in `contents` and returns a concatenated string with of all the content
 
 # Hugging Face Inference Endpoints
 
