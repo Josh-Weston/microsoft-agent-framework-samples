@@ -1,5 +1,5 @@
 """
-Create executors for a workflow, along with an agent.
+Create executors for a workflow, along with an agent, with streaming output
 
 Uses an executor to ping the API, find the most current news article, retrieve its content, and have the agent summarize it.
 """
@@ -11,7 +11,8 @@ from agent_framework import AgentExecutorResponse, Message, Workflow, WorkflowBu
 from agent_framework.openai import OpenAIChatClient
 from dotenv import load_dotenv
 
-from utils import is_agent_response, is_message, is_message_list
+from utils import is_agent_response, is_message, is_message_list, is_agent_response_update
+import json
 
 # See these notes: https://github.com/microsoft/agent-framework/blob/main/python/samples/03-workflows/_start-here/step1_executors_and_edges.py
 
@@ -97,22 +98,33 @@ async def main():
     wf = create_workflow()
     # Note: cannot be None, has to be an empty string if not passing any input (doesn't appear to impact the workflow execution since the ping_open_data_portal executor doesn't use the input, but is required for type consistency since the workflow expects a str input)
     # No input needed since the ping_open_data_portal executor pulls the most recent article
-    events = await wf.run("")
-    outputs = events.get_outputs()
-    for o in outputs:
-        if is_agent_response(o):
-            print("Agent executor response:")
-            print(o)  # This will print the full conversation
-        elif is_message(o):
-            print("Message:")
-            # This will concatenate all list[content] into a single string
-            print(o.text)
-        elif is_message_list(o):
-            print("List of messages:")
-            for msg in o:
-                print(msg)
-        else:
-            print(f"Unknown output type: {type(o)}")
+    async for event in wf.run(message="", stream=True):
+        if event.type == "output" and is_agent_response_update(event.data):
+
+            # Note: it is common for several empty data.text events to be received while the LLM prepares a response.
+            if event.data.text:
+                print(f"Agent response update: {event.data.text}")
+            # else:
+                # print(
+                #     f"Agent response update with no text. Full data: {event.data.to_json()}")
+        # else:
+        #     print(
+        #         f"Received event of type {event.type} with data: {event.data}")
+        # outputs = events.get_outputs()
+        # for o in outputs:
+        #     if is_agent_response(o):
+        #         print("Agent executor response:")
+        #         print(o)  # This will print the full conversation
+        #     elif is_message(o):
+        #         print("Message:")
+        #         # This will concatenate all list[content] into a single string
+        #         print(o.text)
+        #     elif is_message_list(o):
+        #         print("List of messages:")
+        #         for msg in o:
+        #             print(msg)
+        #     else:
+        #         print(f"Unknown output type: {type(o)}")
 
 if __name__ == "__main__":
     load_dotenv()

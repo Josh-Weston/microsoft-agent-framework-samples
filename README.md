@@ -174,9 +174,9 @@ The `AgentExecutorResponse` can be used to get all of the collected messages dur
 
 The `AgentExecutorResponse` is a workflow wrapper around `AgentResponse`. It takes the `AgentResponse` and bundles it with extra state information needed by the workflow.
 
-#### AgentResponse
+#### AgentResponse (Non-streaming)
 
-The `AgentResponse` is generated automatically when using an agent in a `WorkflowBuilder`. When a downstream executor receives the `AgentExecutorResponse` the framework receives the `AgentResponse` for its outputs.
+The `AgentResponse` is generated automatically when using an agent in a non-streaming `WorkflowBuilder`. When a downstream executor receives the `AgentExecutorResponse` the framework receives the `AgentResponse` for its outputs.
 
 When data flows through a low-level WorkflowBuilder:
 
@@ -186,6 +186,10 @@ When data flows through a low-level WorkflowBuilder:
 4. The `AgentExecutor` catches that `AgentResponse`, packages it along with the conversation history into an `AgentExecutorResponse`, and sends that across the edge to the next executor.
 
 **Note:** `AgentResponse` implements the `__str__` method, so using `print(some_agent_response)` will automatically unpack all of its `messages`, append them, and return it for printing.
+
+#### AgentResponseUpdate (Streaming)
+
+The `AgentResponseUpdate` is generated automatically when using an agent in a streaming `WorkflowBuilder` It represents a single streaming response chunk from an Agent. When streaming, you do not receive a single `AgentResponse` instead, you receive several `AgentResponseUpdate` with the chunk of response text.
 
 ### `get_outputs`
 
