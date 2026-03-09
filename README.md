@@ -16,6 +16,14 @@
 
 **Note**: a model that is not trained on structured output will still produce an output in the desired format (because the inference engine enforced this); however, its responses are unlikely to be accurate. For instance, ifyour schema requires an integer, the inference engine blocks the word "The". It also blocks "He", "Based", and every other conversational word the model wants to say. The model is forced to pick its 50th or 100th-choice token—perhaps a random number that has nothing to do with the prompt
 
+# Chosing an Inference Provider
+
+Inference providers provide different costs, throughput, and structured output.
+
+Go to: https://huggingface.co/inference/models to compare
+
+Note: I cannot determine if an API is available to search this programmatically; however, the HTML could be downloaded and parsed since it is just a table.
+
 ## JSON Schema
 
 To make your output compliant with HF and OpenAI, use the following approach (which automatically includes `strict`, `additional_properties` and `required`).

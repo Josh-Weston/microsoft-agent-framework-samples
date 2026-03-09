@@ -1,5 +1,7 @@
 """
-Sample code for accessing GitHub using a personal access token with an agent.
+Sample code for exposing MCP as a skill. This provides lazy loading to reduce
+context length for the agent, which would otherwise always load the MCP tools into its context,
+whether they are relevant or not.
 """
 import asyncio
 import os
@@ -44,7 +46,7 @@ async def main():
             # context_providers = [skills_provider],
             tools=[mcp_tool],
             default_options={
-                "model_id": "openai/gpt-oss-120b:cerebras",
+                "model_id": "openai/gpt-oss-120b:sambanova",
             },
         )
 

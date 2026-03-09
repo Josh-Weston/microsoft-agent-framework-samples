@@ -81,7 +81,8 @@ def get_agent():
         name="News Article Summarizer",
         tools=[],
         default_options={
-            "model_id": "openai/gpt-oss-120b:cerebras",
+            # "model_id": "openai/gpt-oss-120b:cerebras",
+            "model_id": "openai/gpt-oss-20b:fireworks-ai",
         },
     )
 
