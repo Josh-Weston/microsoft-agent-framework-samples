@@ -318,11 +318,11 @@ if True:
 ## Captured Metrics
 
 - For the chat client and chat operations:
-  - **gen_ai.client.operation.duration (histogram)**: This metric measures the duration of each operation, in seconds.
-  - **gen_ai.client.token.usage (histogram)**: This metric measures the token usage, in number of tokens.
+    - **gen_ai.client.operation.duration (histogram)**: This metric measures the duration of each operation, in seconds.
+    - **gen_ai.client.token.usage (histogram)**: This metric measures the token usage, in number of tokens.
 
 - For function invocation during the execute_tool operations:
-  - **agent_framework.function.invocation.duration (histogram)**: This metric measures the duration of each function execution, in seconds.
+    - **agent_framework.function.invocation.duration (histogram)**: This metric measures the duration of each function execution, in seconds.
 
 # Agent Types
 
@@ -343,3 +343,52 @@ MAF follows the Agent Skills: https://agentskills.io/home
 **Note**: MAF Skills is only designed to read text-based files (e.g., `.md | .txt | .py`). The code does not specify any particular file format, but it will only read files with `encoding="utf-8"`.
 
 The skills are processed **before** your agent can use any of its tools.
+
+# GitLab Proxy Workaround
+
+GitLab's MCP server is only accessible over HTTP/SSE and requires OAuth authentication via a browser. Two separate issues make a direct connection from MAF impossible.
+
+## Transport Mismatch
+
+The MAF documentation states that `MCPStreamableHTTPTool` _"connects to MCP servers that communicate via streamable HTTP/SSE"_, which suggests it should work with GitLab. In practice it does not — the connection hangs immediately and never completes the MCP handshake, even with a valid scoped access token and an explicit `httpx` timeout set. The timeout never fires because the HTTP connection itself opens successfully; the server just never sends a response body, indicating that GitLab's SSE implementation is incompatible with the way `MCPStreamableHTTPTool` initiates the session.
+
+The MCP specification defines two distinct HTTP-based transports:
+
+- **SSE (Server-Sent Events)**: The client opens a persistent `GET` connection and the server pushes events down it. Messages are sent back to the server via separate `POST` requests.
+- **Streamable HTTP**: The client `POST`s each message directly and the server responds inline with either JSON or a short-lived SSE stream.
+
+GitLab implements SSE. `MCPStreamableHTTPTool` implements Streamable HTTP. Despite the shared terminology in the docs, these are different handshake patterns and are not interchangeable. MAF currently has no `MCPSSETool` — its only HTTP option is Streamable HTTP.
+
+## OAuth Browser Flow
+
+GitLab's MCP endpoint also requires OAuth authentication completed via a browser, which MAF has no built-in support for. A Personal Access Token (PAT) with the `mcp` scope is rejected — the endpoint expects a proper OAuth `Bearer` token issued through the browser flow.
+
+## The Workaround
+
+`mcp-remote` is a Node package that bridges both gaps. It speaks SSE to GitLab and exposes a stdio interface to MAF's `MCPStdioTool`. On first run it opens a browser for you to authorize access (GitLab records this under your user profile's authorized OAuth applications), then caches the resulting access/refresh tokens locally. All subsequent runs use this cached token, so no browser interaction is needed.
+
+The `gitlab_proxy_wrapper.py` script exists to launch and manage the `mcp-remote` Node process. It was necessary because `mcp-remote` requires a short startup delay (~4.5 seconds) to complete its OAuth handshake with GitLab before it can accept any MCP traffic, and no native Python equivalent existed.
+
+## Why Three Methods Are Intercepted
+
+The wrapper intercepts `ping`, `prompts/list`, and `resources/list` before they reach GitLab. Both the framework and the GitLab server share responsibility for this being necessary.
+
+### `ping`
+
+MAF's `MCPStdioTool._ensure_connected` sends a `ping` before every tool or listing call to verify the connection is alive. GitLab's server responds with `-32601 Method not found`. The framework treats _any_ error response — including `Method not found` — as a connection failure and enters an infinite reconnect loop. The wrapper intercepts `ping` and returns a valid empty result so the connectivity check passes.
+
+- **GitLab's fault**: returning `-32601` instead of a proper pong (or at least a well-formed empty result) is spec-ambiguous.
+- **Framework's fault**: treating a `-32601` on `ping` as a fatal connection failure rather than a "not supported" signal is overly aggressive.
+
+### `prompts/list` and `resources/list`
+
+The MCP `initialize` handshake lets the server advertise its capabilities. GitLab's server declares only `tools`:
+
+```json
+{ "capabilities": { "tools": { "listChanged": false } } }
+```
+
+Despite this, MAF still sends `prompts/list` and `resources/list`. GitLab does not respond at all (no result, no error), causing the framework to hang indefinitely.
+
+- **GitLab's fault**: per JSON-RPC 2.0, every request **must** receive a response — either a result or a `-32601` error. Silently dropping the request is a protocol violation.
+- **Framework's fault**: sending `prompts/list` and `resources/list` to a server that never advertised those capabilities violates the MCP spec, which states clients should only call methods for capabilities the server declared.
