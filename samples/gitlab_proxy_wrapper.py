@@ -15,6 +15,7 @@ def _write_stdout(data: bytes) -> None:
         sys.stdout.buffer.flush()
 
 def main():
+    # Note: "npx" works directly in the shell because it resolves command names using the PATHEXT
     npx = "npx.cmd" if sys.platform == "win32" else "npx"
 
     cmd = [
@@ -32,7 +33,7 @@ def main():
         cmd,
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
-        stderr=sys.stderr 
+        stderr=subprocess.PIPE,
     )
 
     if not process.stdout or not process.stderr or not process.stdin:

@@ -5,9 +5,8 @@ whether they are relevant or not.
 """
 import asyncio
 import os
-import httpx
 from pathlib import Path
-from agent_framework import Agent, MCPStreamableHTTPTool
+from agent_framework import Agent
 # An OpenAIResponses compatible client
 from agent_framework.openai import OpenAIChatClient
 from agent_framework import MCPStdioTool, FileAgentSkillsProvider
