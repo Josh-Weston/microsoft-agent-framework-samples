@@ -46,7 +46,7 @@ async def sequential_orchestration():
     chat_client = OpenAIChatClient(
         base_url=os.getenv("HF_API_BASE_URL"),
         api_key=os.getenv("HF_API_KEY"),
-        model_id="not_used",  # required but not used since we set the model in the agent options
+        model="not_used",  # required but not used since we set the model in the agent options
     )
 
     tool_calling_agent = Agent(
@@ -56,7 +56,7 @@ async def sequential_orchestration():
         description="An agent that can get the weather for a given location.",
         tools=[get_weather],
         default_options={
-            "model_id": "openai/gpt-oss-20b:fireworks-ai",
+            "model": "openai/gpt-oss-20b:fireworks-ai",
         }
     )
 
@@ -66,7 +66,7 @@ async def sequential_orchestration():
         name="Structured output agent",
         description="An agent that can provide information in a structured format.",
         default_options={
-            "model_id": "openai/gpt-oss-20b:fireworks-ai",
+            "model": "openai/gpt-oss-20b:fireworks-ai",
             "temperature": 0.3,
             "response_format": response_format,
         },
