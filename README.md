@@ -1,6 +1,10 @@
 # Install Microsoft Agent Framework
 
-`uv add agent-framework --pre`
+`uv add agent-framework`
+
+# Update Guide (Signifact Changes)
+
+[2026 Python Significant Changes](https://learn.microsoft.com/en-us/agent-framework/support/upgrade/python-2026-significant-changes#python-100)
 
 # Running samples
 
