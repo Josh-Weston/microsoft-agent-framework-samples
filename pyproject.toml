@@ -5,7 +5,10 @@ description = "A repository of sample code for the Microsoft Agent Framework."
 readme = "README.md"
 requires-python = ">=3.13.5"
 dependencies = [
-    "agent-framework>=1.0.0",
+    "agent-framework-core>=1.2.1",
+    "agent-framework-ollama>=1.0.0b260428",
+    "agent-framework-openai>=1.2.1",
+    "aiohttp>=3.13.5",
     "httpx>=0.28.1",
     "ipykernel>=7.2.0",
     "notebook>=7.5.5",
