@@ -1,0 +1,26 @@
+{
+    "application_id": "PERMIT-2026-005",
+    "submission_date": "2026-05-12",
+    "permit_type": "Solar Panel Installation",
+    "parcel_number": null,
+    "property_address": {
+        "street": "1901 Ridgewood Avenue",
+        "city": "Maplewood",
+        "state": "CA",
+        "zip": "94065"
+    },
+    "applicant": {
+        "name": "Tomás Guerrero",
+        "phone": "650-555-0839",
+        "email": "tguerrero@example.com",
+        "signature": null,
+        "signature_date": null
+    },
+    "project_description": "Rooftop installation of 24-panel photovoltaic solar system, 9.6 kW total capacity, with battery storage.",
+    "estimated_cost": null,
+    "contractor": {
+        "name": "SunPath Energy Solutions",
+        "license_number": "CA-C10-488876",
+        "phone": "650-555-0902"
+    }
+}

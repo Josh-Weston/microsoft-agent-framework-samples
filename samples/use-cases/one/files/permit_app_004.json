@@ -1,0 +1,26 @@
+{
+    "application_id": "PERMIT-2026-004",
+    "submission_date": "2026-05-01",
+    "permit_type": "Accessory Dwelling Unit",
+    "parcel_number": "203-445-0071",
+    "property_address": {
+        "street": "57 Crestview Court",
+        "city": "Maplewood",
+        "state": "CA",
+        "zip": "94064"
+    },
+    "applicant": {
+        "name": "Priya Nair",
+        "phone": "650-555-0622",
+        "email": "pnair@example.com",
+        "signature": null,
+        "signature_date": null
+    },
+    "project_description": "Construction of a 640 sq ft detached ADU with full kitchen and bathroom in rear yard.",
+    "estimated_cost": 195000,
+    "contractor": {
+        "name": "Bay Area ADU Specialists",
+        "license_number": "CA-B-910234",
+        "phone": "650-555-0700"
+    }
+}

@@ -26,9 +26,9 @@ def extract_text_from_pdf(file_path: Annotated[str, Field(description="The path 
         return "\n".join(text)
     except Exception as e:
         return f"Error reading PDF: {str(e)}"
-    
 
-file_path = "information.pdf"
+
+file_path = "samples/use-cases/one/files/permit_app_005.pdf"
 if __name__ == "__main__":
     extracted_text = extract_text_from_pdf(file_path)
     with open("blog_post_information.txt", "w", encoding="utf-8") as f:

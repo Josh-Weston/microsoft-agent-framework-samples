@@ -1,0 +1,26 @@
+{
+    "application_id": "PERMIT-2026-001",
+    "submission_date": "2026-04-10",
+    "permit_type": "Residential Construction",
+    "parcel_number": "047-321-0089",
+    "property_address": {
+        "street": "1422 Elmwood Drive",
+        "city": "Maplewood",
+        "state": "CA",
+        "zip": "94063"
+    },
+    "applicant": {
+        "name": "Sandra Reyes",
+        "phone": "650-555-0142",
+        "email": "sreyes@example.com",
+        "signature": "Sandra Reyes",
+        "signature_date": "2026-04-10"
+    },
+    "project_description": "New single-family residence, 2,400 sq ft, two-story, attached two-car garage.",
+    "estimated_cost": 480000,
+    "contractor": {
+        "name": "Horizon Build Group",
+        "license_number": "CA-B-883201",
+        "phone": "650-555-0299"
+    }
+}

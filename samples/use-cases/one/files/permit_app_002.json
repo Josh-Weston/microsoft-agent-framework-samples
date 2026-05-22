@@ -1,0 +1,26 @@
+{
+    "application_id": "PERMIT-2026-002",
+    "submission_date": "2026-04-15",
+    "permit_type": "Commercial Renovation",
+    "parcel_number": "112-089-0044",
+    "property_address": {
+        "street": "880 Industrial Parkway, Suite 3",
+        "city": "Maplewood",
+        "state": "CA",
+        "zip": "94065"
+    },
+    "applicant": {
+        "name": "Derek Fontaine",
+        "phone": "650-555-0371",
+        "email": "dfontaine@examplecorp.com",
+        "signature": "Derek Fontaine",
+        "signature_date": "2026-04-15"
+    },
+    "project_description": "Interior demolition and rebuild of 5,000 sq ft retail space. New electrical, plumbing, and HVAC systems.",
+    "estimated_cost": 325000,
+    "contractor": {
+        "name": "Pacific Coast Contractors LLC",
+        "license_number": "CA-B-774412",
+        "phone": "650-555-0188"
+    }
+}

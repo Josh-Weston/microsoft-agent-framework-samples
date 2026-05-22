@@ -1,0 +1,26 @@
+{
+    "application_id": "PERMIT-2026-003",
+    "submission_date": "2026-04-22",
+    "permit_type": "Deck Addition",
+    "parcel_number": null,
+    "property_address": {
+        "street": "310 Birch Lane",
+        "city": "Maplewood",
+        "state": "CA",
+        "zip": "94063"
+    },
+    "applicant": {
+        "name": "Marcus Webb",
+        "phone": "650-555-0518",
+        "email": "mwebb@example.com",
+        "signature": "Marcus Webb",
+        "signature_date": "2026-04-22"
+    },
+    "project_description": "Addition of a 400 sq ft rear deck with pressure-treated lumber and composite decking.",
+    "estimated_cost": 22000,
+    "contractor": {
+        "name": "Webb Home Improvements",
+        "license_number": "CA-B-651009",
+        "phone": "650-555-0518"
+    }
+}
