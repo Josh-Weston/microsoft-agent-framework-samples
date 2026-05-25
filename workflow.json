@@ -1,0 +1,50 @@
+{
+    "name": "WorkflowBuilder-35d2b29c-784c-4208-a842-0f2e03e23fe4",
+    "id": "4e03dfa3-64ee-47ed-979b-0a19578b96a6",
+    "start_executor_id": "read_pdf",
+    "max_iterations": 100,
+    "edge_groups": [
+        {
+            "id": "InternalEdgeGroup/d629a2c0-0884-495b-b70a-1a63f7a32d7b",
+            "type": "InternalEdgeGroup",
+            "edges": [
+                {
+                    "source_id": "internal:read_pdf",
+                    "target_id": "read_pdf"
+                }
+            ]
+        },
+        {
+            "id": "InternalEdgeGroup/65c3ef3d-cab2-4f71-9620-0aa25d4d6e30",
+            "type": "InternalEdgeGroup",
+            "edges": [
+                {
+                    "source_id": "internal:Building Permit Data Extraction Agent",
+                    "target_id": "Building Permit Data Extraction Agent"
+                }
+            ]
+        },
+        {
+            "id": "SingleEdgeGroup/76ec7add-7d9f-43fb-bd0e-eea01194bd83",
+            "type": "SingleEdgeGroup",
+            "edges": [
+                {
+                    "source_id": "read_pdf",
+                    "target_id": "Building Permit Data Extraction Agent"
+                }
+            ]
+        }
+    ],
+    "executors": {
+        "read_pdf": {
+            "id": "read_pdf",
+            "type": "FunctionExecutor"
+        },
+        "Building Permit Data Extraction Agent": {
+            "id": "Building Permit Data Extraction Agent",
+            "type": "AgentExecutor"
+        }
+    },
+    "output_executors": null,
+    "intermediate_executors": null
+}
