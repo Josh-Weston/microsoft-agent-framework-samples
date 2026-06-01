@@ -71,3 +71,13 @@ async def on_human_feedback(
 When you receive a response from an external system, send it back to the workflow using the `response` mechanism. The framework automatically routes the response to the executor's `@response_handler` method.
 
 `workflow.run(stream=True, responses=pending_responses)`
+
+Note: internally, the package uses the request_id UUID to map a caller-supplied response to the correct pending request. Workflow execution collects all `request_info` requests and pauses the workflow (completes the super step). Next, when `workflow.run()` is called again, a new super step is started and the responses are routed to the requestors. Only executors with pending messages re-run, plus any executors they activate downstream.
+
+The workflow is a frozen request queue that only advances when you call run(), and HITL responses are just pre-loaded replies that unblock the specific executors waiting on them before the next tick.
+
+In the case of an agent, the response is packaged as a message that is added to the existing conversation and the entire conversation is passed as inference. The agent knows to complete the conversation because the last message is a `request_info` or `tool_call` for which it has learned to use that content to respond to the original request.
+
+## Functional API (Experimental)
+
+The functional API is an alternative approach to creating workflows. It allows for writing more concise, procedural workflows instead of using the graph based (classes and declarative patterns). It appears to have all of the functionality of the builder API, but shouldn't be used in production until no longer experimental.

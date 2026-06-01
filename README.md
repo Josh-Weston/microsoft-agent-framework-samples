@@ -133,8 +133,16 @@ class WeatherInfo(BaseModel):
 
 # MAF Class and Function Information
 
-`OpenAIChatClient`: traditional way to build agents, focusing on stateless message-by-message interactions. Local MCP tools only.
-`OpenAIResponsesClient`: the newer OpenAI Responses API for more complex agentic behaviours. Includes code interpreter, full support for reasoning models, file search, etc. Local and hosted MCP support.
+`OpenAIChatCompletionClient`: traditional way to build agents, focusing on stateless message-by-message interactions. Local MCP tools only.
+`OpenAIChatClient`: the newer OpenAI Responses API for more complex agentic behaviours. Includes code interpreter, full support for reasoning models, file search, etc. Local and hosted MCP support.
+
+Supported classes include:
+
+- OpenAIChatClient (Responses API)
+- OpenAIChatCompletionClient (Chat Completions API)
+- OpenAIEmbeddingClient
+
+Note: If using HuggingFace Inference Providers, you should use `OpenAIChatCompletionClient` as the Responses API is in beta and it is not guaranteed that providers implement it since it would require them to store state information (e.g., messages)
 
 #### `ctx.WorkflowContext[send_message_type, yield_output_type]`
 
@@ -322,11 +330,11 @@ if True:
 ## Captured Metrics
 
 - For the chat client and chat operations:
-    - **gen_ai.client.operation.duration (histogram)**: This metric measures the duration of each operation, in seconds.
-    - **gen_ai.client.token.usage (histogram)**: This metric measures the token usage, in number of tokens.
+  - **gen_ai.client.operation.duration (histogram)**: This metric measures the duration of each operation, in seconds.
+  - **gen_ai.client.token.usage (histogram)**: This metric measures the token usage, in number of tokens.
 
 - For function invocation during the execute_tool operations:
-    - **agent_framework.function.invocation.duration (histogram)**: This metric measures the duration of each function execution, in seconds.
+  - **agent_framework.function.invocation.duration (histogram)**: This metric measures the duration of each function execution, in seconds.
 
 # Agent Types
 

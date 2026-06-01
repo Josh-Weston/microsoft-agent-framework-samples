@@ -268,6 +268,3 @@ async def main() -> None:
 
 if __name__ == "__main__":
     asyncio.run(main())
-
-# LEFT-OFF: figuring out how responses mapping works (see the responses parameter in run)
-# LEFT_OFF: see the Functional Workflow API for how to do HITL with regular functions

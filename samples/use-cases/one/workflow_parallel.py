@@ -1,4 +1,4 @@
-from agent_framework import AgentExecutorResponse, ResponseStream, WorkflowEvent, WorkflowRunResult, executor, WorkflowContext, Message, SkillsProvider, Executor, handler, response_handler
+from agent_framework import AgentExecutorResponse, ResponseStream, WorkflowEvent, WorkflowRunResult, executor, WorkflowContext, Message, SkillsProvider
 from agent_framework.orchestrations import SequentialBuilder, AgentRequestInfoResponse
 from agent_framework.openai import OpenAIChatCompletionClient
 from pypdf import PdfReader
@@ -9,7 +9,7 @@ import asyncio
 import pathlib
 import os
 
-from utils import extract_request_from_event, is_agent_executor_response, is_agent_response, is_agent_response_update
+from utils import is_agent_executor_response, is_agent_response, is_agent_response_update
 
 
 class PermitData(BaseModel):
@@ -76,10 +76,10 @@ async def read_pdf(input_messages: Annotated[list[Message], Field(description="T
 
 # MODEL = "openai/gpt-oss-120b:cerebras"
 # MODEL = "deepseek-ai/DeepSeek-V4-Pro:fireworks-ai"
-# MODEL = "Qwen/Qwen3.5-397B-A17B:together"
+MODEL = "Qwen/Qwen3.5-397B-A17B:together"
 # MODEL = "Qwen/Qwen3-32B:groq"
 # MODEL = "openai/gpt-oss-120b:sambanova"
-MODEL = "openai/gpt-oss-120b:ovhcloud"
+# MODEL = "openai/gpt-oss-120b:ovhcloud"
 
 
 def create_data_agent():
@@ -102,10 +102,9 @@ def create_data_agent():
         },
     )
 
-# @executor()
+
+@executor()
 # async def stash_
-
-
 def create_contractor_approval_agent():
     chat_client = OpenAIChatCompletionClient(
         model="not_used",  # required but not used since we set the model in the agent options
@@ -119,10 +118,10 @@ def create_contractor_approval_agent():
 
     return chat_client.as_agent(
         instructions=(
-            "You are a contractor approval agent. You MUST use the load_skill tool to read the "
-            "'contractor-approval-list' skill before making any determination. "
-            "After reading the skill, check if the contractor name from the permit data appears "
-            "in the approved list, then output your ContractorApprovalResponse."
+            "You are a contractor approval agent that determines whether a contractor is on the auto-approved list for building permits."
+            "You will be given the name of a contractor and you should determine whether the contractor is on the auto-approved list."
+            "Use your provided skills to check the contractor's approval status based on the name of the contractor. Always review the SKILL.md file of a selected skill to understand the required workflow before taking action."
+            "If the contractor is not on the auto-approved list, you should yield a request for human approval before proceeding with the permit evaluation."
         ),
         name="contractor_approval_agent",
         tools=[],
@@ -132,35 +131,6 @@ def create_contractor_approval_agent():
             "response_format": ContractorApprovalResponse,
         },
     )
-
-
-class ContractorApproval(Executor):
-    def __init__(self):
-        super().__init__(id="contractor_approval_executor")
-
-    @handler
-    async def handle_input(self, input: AgentExecutorResponse, ctx: WorkflowContext[str, str]) -> None:
-        validated_input = ContractorApprovalResponse.model_validate_json(
-            input.agent_response.text)
-
-        if validated_input.approved:
-            await ctx.yield_output(f"Contractor {validated_input.contractor_name} is approved. Proceeding with permit evaluation.")
-        else:
-            await ctx.request_info(request_data=f"Contractor {validated_input.contractor_name} is not approved. Do you want to proceed with the permit evaluation anyway?", response_type=str)
-
-    # LEFT-OFF: getting response type mismatch: expected <class 'str'>, got <class 'agent_framework_orchestrations._orchestration_request_info.AgentRequestInfoResponse'>
-    # LEFT-OFF: I tried changing both of these to AgentRequestInfoResponse, but neither worked, so error is somewhere else
-    @response_handler
-    async def on_human_response(
-        self,
-        original_request: str,
-        response: str,
-        ctx: WorkflowContext[str, str],
-    ) -> None:
-        if response.lower() in ["yes", "y"]:
-            await ctx.yield_output("Proceeding with permit evaluation despite contractor not being approved.")
-        else:
-            await ctx.yield_output("Permit evaluation halted due to contractor not being approved.")
 
 
 def create_compliance_agent():
@@ -216,16 +186,13 @@ def create_compliance_agent():
 
 def create_workflow():
     data_agent = create_data_agent()
-    contractor_approval_agent = create_contractor_approval_agent()
-    contractor_approval_executor = ContractorApproval()
     compliance_agent = create_compliance_agent()
     return (
         SequentialBuilder(
-            participants=[read_pdf, data_agent,
-                          contractor_approval_agent, contractor_approval_executor],
+            participants=[read_pdf, data_agent, compliance_agent],
             chain_only_agent_responses=True,
         )
-        # .with_request_info(agents=[contractor_approval_agent])
+        .with_request_info(agents=[compliance_agent])
         .build()
         # WorkflowBuilder(start_executor=read_pdf)
         # .add_edge(read_pdf, data_agent)
@@ -233,15 +200,13 @@ def create_workflow():
         # .build()
     )
 
-# LEFT-OFF: an executor requesting information and agent requesting information provide different payloads
-
 
 async def process_event_stream(stream: ResponseStream[WorkflowEvent[Any], WorkflowRunResult]):
     responses: dict[str, AgentRequestInfoResponse] = {}
-    requests: dict[str, str] = {}
+    requests: dict[str, AgentExecutorResponse] = {}
     async for event in stream:
-        if event.type == "request_info":
-            requests[event.request_id] = extract_request_from_event(event)
+        if event.type == "request_info" and is_agent_executor_response(event.data):
+            requests[event.request_id] = event.data
         elif event.type == "output" and is_agent_response(event.data):
             # The output of the sequential workflow is a list of ChatMessages
             print("\n" + "=" * 60)
@@ -254,19 +219,17 @@ async def process_event_stream(stream: ResponseStream[WorkflowEvent[Any], Workfl
                 print(f"[{message.author_name or message.role}]: {message.text}")
 
     for request_id, request_data in requests.items():
-        agent_request = request_data
+        agent_request = request_data.agent_response.text
         print(
             f"Agent is requesting info with the following request: {agent_request}")
         # Get feedback on the agent's response (approve or request iteration)
-        user_input = input("Your guidance (or 'skip' to reject): ")
-        responses[request_id] = AgentRequestInfoResponse.from_strings([
-                                                                      user_input])
-        # if user_input.lower() == "skip":
-        #     user_input = AgentRequestInfoResponse.approve()
-        # else:
-        #     user_input = AgentRequestInfoResponse.from_strings([
-        #         user_input])
-        # responses[request_id] = user_input
+        user_input = input("Your guidance (or 'skip' to approve): ")
+        if user_input.lower() == "skip":
+            user_input = AgentRequestInfoResponse.approve()
+        else:
+            user_input = AgentRequestInfoResponse.from_strings([
+                user_input])
+        responses[request_id] = user_input
     return responses if responses else None
 
 
