@@ -9,7 +9,7 @@ import asyncio
 import pathlib
 import os
 
-from utils import extract_request_from_event, is_agent_executor_response, is_agent_response, is_agent_response_update
+from utils import extract_request_from_event, extract_response_from_event, is_agent_executor_response, is_agent_response, is_agent_response_update
 
 
 class PermitData(BaseModel):
@@ -39,6 +39,11 @@ class PermitData(BaseModel):
         description="The name of the contractor listed on the building permit application.")]
 
 
+class PermitDataWithContractorApproval(PermitData):
+    contractor_approved: Annotated[bool, Field(
+        description="Whether the contractor is approved for the building permit application.")]
+
+
 class ComplianceResult(BaseModel):
     # Forbid extra fields to ensure strict adherence to the schema
     # model_config = ConfigDict(extra="forbid")
@@ -61,6 +66,9 @@ class ContractorApprovalResponse(BaseModel):
         description="The name of the contractor being evaluated.")]
 
 
+MODEL = "openai/gpt-oss-120b:ovhcloud"
+
+
 @executor()
 async def read_pdf(input_messages: Annotated[list[Message], Field(description="The input messages containing the path to the PDF file.")], ctx: WorkflowContext[str, Exception]):
     """
@@ -73,13 +81,6 @@ async def read_pdf(input_messages: Annotated[list[Message], Field(description="T
         await ctx.send_message("\n".join(text))
     except Exception as e:
         await ctx.yield_output(e)
-
-# MODEL = "openai/gpt-oss-120b:cerebras"
-# MODEL = "deepseek-ai/DeepSeek-V4-Pro:fireworks-ai"
-# MODEL = "Qwen/Qwen3.5-397B-A17B:together"
-# MODEL = "Qwen/Qwen3-32B:groq"
-# MODEL = "openai/gpt-oss-120b:sambanova"
-MODEL = "openai/gpt-oss-120b:ovhcloud"
 
 
 def create_data_agent():
@@ -102,9 +103,18 @@ def create_data_agent():
         },
     )
 
-# @executor()
-# async def stash_
 
+@executor()
+async def stash_permit_data(input: AgentExecutorResponse, ctx: WorkflowContext[str, None]):
+    """
+    stash_permit_data receives the extracted permit data and stashes it in the workflow context for later use
+    """
+    permit_data = PermitData.model_validate_json(input.agent_response.text)
+    ctx.set_state("permit_data", permit_data)
+    await ctx.send_message(permit_data.model_dump_json())
+
+
+# Note: the problem is the contractor approval agent receives all of the data, but it only outputs the contractor approval response, which is then sent to the contractor approval executor. The contractor approval executor checks if the contractor is approved, and if not, it requests info from the user about whether to proceed with the permit evaluation anyway. However, since the contractor approval agent's response only contains the approval status and contractor name, the executor does not have access to the rest of the permit data that it would need to include in the request for information to provide context to the user. One solution would be to include the relevant permit data in the agent's response so that it can be used in the executor's request for information.
 
 def create_contractor_approval_agent():
     chat_client = OpenAIChatCompletionClient(
@@ -143,13 +153,22 @@ class ContractorApproval(Executor):
         validated_input = ContractorApprovalResponse.model_validate_json(
             input.agent_response.text)
 
-        if validated_input.approved:
-            await ctx.yield_output(f"Contractor {validated_input.contractor_name} is approved. Proceeding with permit evaluation.")
-        else:
-            await ctx.request_info(request_data=f"Contractor {validated_input.contractor_name} is not approved. Do you want to proceed with the permit evaluation anyway?", response_type=str)
+        permit_data: PermitData = ctx.get_state("permit_data")
+        if not isinstance(permit_data, PermitData):
+            await ctx.yield_output(ValueError("Permit data not found in context"))
+            return
 
-    # LEFT-OFF: getting response type mismatch: expected <class 'str'>, got <class 'agent_framework_orchestrations._orchestration_request_info.AgentRequestInfoResponse'>
-    # LEFT-OFF: I tried changing both of these to AgentRequestInfoResponse, but neither worked, so error is somewhere else
+        if validated_input.approved:
+            permit_data_with_approval = PermitDataWithContractorApproval(
+                **permit_data.model_dump(), contractor_approved=True)
+            await ctx.send_message(permit_data_with_approval.model_dump_json())
+        else:
+            await ctx.request_info(
+                request_data=f"Contractor {validated_input.contractor_name} is not approved. Do you want to proceed with the permit evaluation anyway?",
+                response_type=str
+            )
+
+    # LEFT-OFF: this is failing when attempting to send the permit data with contractor approval to the next agent in the workflow.s
     @response_handler
     async def on_human_response(
         self,
@@ -158,9 +177,16 @@ class ContractorApproval(Executor):
         ctx: WorkflowContext[str, str],
     ) -> None:
         if response.lower() in ["yes", "y"]:
-            await ctx.yield_output("Proceeding with permit evaluation despite contractor not being approved.")
+            permit_data: PermitData = ctx.get_state("permit_data")
+            if not isinstance(permit_data, PermitData):
+                await ctx.yield_output(ValueError("Permit data not found in context"))
+                return
+            permit_data_with_approval = PermitDataWithContractorApproval(
+                **permit_data.model_dump(), contractor_approved=True)
+            await ctx.send_message(permit_data_with_approval.model_dump_json())
         else:
             await ctx.yield_output("Permit evaluation halted due to contractor not being approved.")
+            return
 
 
 def create_compliance_agent():
@@ -174,41 +200,17 @@ def create_compliance_agent():
         skill_paths=pathlib.Path(__file__).parent / "skills"
     )
 
-    # return chat_client.as_agent(
-    #     instructions=(
-    #         "You are a building permit compliance agent that determines whether a building permit application is compliant based on the extracted data from the application and the relevant building codes."
-    #         "You will be given the extracted data from a building permit application and you should determine whether the application is compliant with the relevant building codes."
-    #         "You do not know how to do specialized tasks. You have access to a variety of specialized skills."
-    #         "Whenever a user asks you to perform a task, use your skill-reading tools to find the relevant skill. Always review the SKILL.md file of a selected skill to understand the required workflow before taking action."
-    #         "Only use the information provided in the SKILL.md file and any resources within the skill's references and assets folders to complete the task. Do not use any outside knowledge or information. Do not infer or assume any information that is not explicitly provided in the skill's resources."
-    #     ),
-    #     name="building_permit_compliance_agent",
-    #     tools=[],
-    #     context_providers=[skills_provider],
-    #     default_options={
-    #         "model": "openai/gpt-oss-120b:cerebras",
-    #         "response_format": ComplianceResult,
-    #     },
-    # )
-
-    # LEFT-OFF: the "you must always ask for human input" creates an infinite loop
-    # LEFT-OFF: reviewing more samples from Microsoft that use HITL without an executor (agent-only)
-
     return chat_client.as_agent(
         instructions=(
-            "You are a building permit compliance agent that determines whether a building permit application is compliant based on the extracted data from the application and the relevant compliance checks."
-            "You will be given the extracted data from a building permit application and you should determine whether the application is compliant with the relevant compliance checks."
-            "You must always ask for human input to determine if the contractor is on the auto-approved list before proceeding with the permit evaluation. You should not proceed with the permit evaluation or reference any skills until you have received confirmation from the user about whether the contractor is approved or not."
-            # "Determine the appropriate skills to reference based on the information provided in the building permit application. Always review the SKILL.md file of a selected skill to understand the required workflow before taking action."
-
-            # "If a contractor is not on the auto-approved list, you should yield a request for human approval before proceeding with the permit evaluation."
-            # "If the user confirms that the contractor is not approved, you can immediately determine that the application is not compliant."
-            # "If the user confirms that the contractor is approved, then you should proceed with referencing the relevant skills to determine compliance based on the other extracted data."
+            "You are a building permit compliance agent that determines whether a building permit application is compliant based on the extracted data from the application and the relevant building codes."
+            "You will be given the extracted data from a building permit application and you should determine whether the application is compliant with the information in the building permit compliance skill."
+            "You MUST use the load_skill tool to read the 'building-permit-compliance' skill before making any decisions."
         ),
         name="building_permit_compliance_agent",
         tools=[],
+        context_providers=[skills_provider],
         default_options={
-            "model": MODEL,
+            "model": "openai/gpt-oss-120b:cerebras",
             "response_format": ComplianceResult,
         },
     )
@@ -221,8 +223,8 @@ def create_workflow():
     compliance_agent = create_compliance_agent()
     return (
         SequentialBuilder(
-            participants=[read_pdf, data_agent,
-                          contractor_approval_agent, contractor_approval_executor],
+            participants=[read_pdf, data_agent, stash_permit_data,
+                          contractor_approval_agent, contractor_approval_executor, compliance_agent],
             chain_only_agent_responses=True,
         )
         # .with_request_info(agents=[contractor_approval_agent])
@@ -233,40 +235,26 @@ def create_workflow():
         # .build()
     )
 
-# LEFT-OFF: an executor requesting information and agent requesting information provide different payloads
-
 
 async def process_event_stream(stream: ResponseStream[WorkflowEvent[Any], WorkflowRunResult]):
-    responses: dict[str, AgentRequestInfoResponse] = {}
+    responses: dict[str, str] = {}
     requests: dict[str, str] = {}
     async for event in stream:
         if event.type == "request_info":
             requests[event.request_id] = extract_request_from_event(event)
-        elif event.type == "output" and is_agent_response(event.data):
+        elif event.type == "output":
+            output = extract_response_from_event(event)
             # The output of the sequential workflow is a list of ChatMessages
             print("\n" + "=" * 60)
             print("WORKFLOW COMPLETE")
             print("=" * 60)
-            print("Final output:")
-            print(event)
-            for message in event.data.messages:
-                print(message.text)
-                print(f"[{message.author_name or message.role}]: {message.text}")
+            print(f"Final output: {output}")
 
     for request_id, request_data in requests.items():
         agent_request = request_data
-        print(
-            f"Agent is requesting info with the following request: {agent_request}")
         # Get feedback on the agent's response (approve or request iteration)
-        user_input = input("Your guidance (or 'skip' to reject): ")
-        responses[request_id] = AgentRequestInfoResponse.from_strings([
-                                                                      user_input])
-        # if user_input.lower() == "skip":
-        #     user_input = AgentRequestInfoResponse.approve()
-        # else:
-        #     user_input = AgentRequestInfoResponse.from_strings([
-        #         user_input])
-        # responses[request_id] = user_input
+        user_input = input(f"{agent_request} (y/N): ")
+        responses[request_id] = user_input
     return responses if responses else None
 
 
@@ -296,10 +284,48 @@ if __name__ == "__main__":
     asyncio.run(main(file))
 
 
-# LEFT-OFF: I think I need to catch-up the agent requests? user_input_requests
+# LEFT-OFF: test the conditionals, which allow for branching logic
+"""
+   workflow = (
+        WorkflowBuilder(start_executor=spam_detection_agent)
+        # Not spam path: transform response -> request for assistant -> assistant -> send email
+        .add_edge(spam_detection_agent, to_email_assistant_request, condition=get_condition(False))
+        .add_edge(to_email_assistant_request, email_assistant_agent)
+        .add_edge(email_assistant_agent, handle_email_response)
+        # Spam path: send to spam handler
+        .add_edge(spam_detection_agent, handle_spam_classifier_response, condition=get_condition(True))
+        .build()
+    )
+"""
 
-# LEFT-OFF: the deepseek model doesn't seem to be working at all (was returning HTML data from HuggingFace)
+# switch-case for cleaner three-way routing
+"""
+    workflow = (
+        WorkflowBuilder(start_executor=store_email)
+        .add_edge(store_email, spam_detection_agent)
+        .add_edge(spam_detection_agent, to_detection_result)
+        .add_switch_case_edge_group(
+            to_detection_result,
+            [
+                # Explicit cases for specific decisions
+                Case(condition=get_case("NotSpam"), target=submit_to_email_assistant),
+                Case(condition=get_case("Spam"), target=handle_spam),
+                # Default case catches anything that doesn't match above
+                Default(target=handle_uncertain),
+            ],
+        )
+        .add_edge(submit_to_email_assistant, email_assistant_agent)
+        .add_edge(email_assistant_agent, finalize_and_send)
+        .build()
+    )
+"""
 
-# LEFT-OFF: the agent asks a question without enough details, I respond with some guidance, but the agent is unaware of the context of its question
-# LEFT-OFF: I still don't have the final output
-# LEFT-OFF: reading the HITL section of the documentation; the agent sometimes "uses output" instead of "request_info"
+# Multiselection pattern
+"""
+# One input → one or more outputs (dynamic fan-out)
+.add_multi_selection_edge_group(
+    source,
+    [handler_a, handler_b, handler_c, handler_d],
+    selection_func=intelligent_router,  # Returns list of target IDs
+)
+"""

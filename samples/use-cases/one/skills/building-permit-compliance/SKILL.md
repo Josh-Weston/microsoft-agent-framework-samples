@@ -13,10 +13,4 @@ For a building permit to be approved, the solar panel installation plan must com
 - The application's signature must be present and must match the applicant's name.
 - The parcel number must be provided and must follow the format "XXX-XXX-XXXX" format
 - The estimated cost of the project must be provided and must be a positive number.
-
-The following contractors are auto-approved for solar panel installations and do not require additional verification:
-
-- "SunPath Energy Solutions"
-- "GreenTech Solar Installers"
-
-All other contractors require approval from the compliance agent. If the contractor is not on the auto-approved list, the compliance agent should yield a request for human approval before proceeding with the permit evaluation.
+- The contractor must be approved

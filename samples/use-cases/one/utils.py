@@ -21,14 +21,34 @@ def is_agent_executor_response(val: Any) -> TypeIs[AgentExecutorResponse]:
 def is_workflow_event(val: Any) -> bool:
     return isinstance(val, WorkflowEvent)
 
+
 def extract_request_from_event(event: WorkflowEvent) -> str:
     if is_agent_executor_response(event.data):
         return event.data.agent_response.text
-    
+
     if isinstance(event.data, str):
         return event.data
-    
+
     return str(event.data)
+
+
+def extract_response_from_event(event: WorkflowEvent) -> str:
+
+    if is_agent_response_update(event.data):
+        return event.data.text
+
+    if is_agent_response(event.data):
+        # The concatenated text of all messages in the response (use event.data.messages to get the individual messages)
+        return event.data.text
+
+    if is_agent_executor_response(event.data):
+        return event.data.agent_response.text
+
+    if isinstance(event.data, str):
+        return event.data
+
+    return str(event.data)
+
 
 def is_message_list(val: Any) -> bool:
     if not isinstance(val, list):
