@@ -47,6 +47,9 @@ def extract_response_from_event(event: WorkflowEvent) -> str:
     if isinstance(event.data, str):
         return event.data
 
+    if isinstance(event.data, list):
+        return "".join(map(str, event.data))
+
     return str(event.data)
 
 

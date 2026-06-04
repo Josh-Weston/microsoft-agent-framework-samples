@@ -7,3 +7,4 @@ description: A skill for determining whether a contractor is on the auto-approve
 
 - "Sunshine Saver Solutions"
 - "GreenTech Solar Installers"
+- "Horizon Build Group

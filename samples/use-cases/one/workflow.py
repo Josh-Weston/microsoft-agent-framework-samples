@@ -1,6 +1,3 @@
-from agent_framework import AgentExecutorResponse, ResponseStream, WorkflowEvent, WorkflowRunResult, executor, WorkflowContext, Message, SkillsProvider, Executor, handler, response_handler
-from agent_framework.orchestrations import SequentialBuilder, AgentRequestInfoResponse
-from agent_framework.openai import OpenAIChatCompletionClient
 from pypdf import PdfReader
 from dotenv import load_dotenv
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -8,18 +5,26 @@ from typing import Annotated, Any
 import asyncio
 import pathlib
 import os
-
 from utils import extract_request_from_event, extract_response_from_event, is_agent_executor_response, is_agent_response, is_agent_response_update
+
+import logging
+logging.getLogger("agent_framework").setLevel(logging.ERROR)
+
+if True:
+    from agent_framework.openai import OpenAIChatCompletionClient
+    from agent_framework.orchestrations import SequentialBuilder, AgentRequestInfoResponse
+    from agent_framework import AgentExecutorResponse, ResponseStream, WorkflowEvent, WorkflowRunResult, executor, WorkflowContext, Message, SkillsProvider, Executor, handler, response_handler
 
 
 class PermitData(BaseModel):
     # Forbid extra fields to ensure strict adherence to the schema
     # model_config = ConfigDict(extra="forbid")
 
-    @classmethod
-    def model_validate_json(cls, json_data, *, strict=None, extra=None, context=None, by_alias=None, by_name=None):
-        print(f"[DEBUG] PermitData raw JSON: {json_data!r}")
-        return super().model_validate_json(json_data, strict=strict, extra=extra, context=context, by_alias=by_alias, by_name=by_name)
+    # Uncomment this to see the raw JSON being validated, which can be helpful for debugging issues with the LLM's output not matching the expected schema
+    # @classmethod
+    # def model_validate_json(cls, json_data, *, strict=None, extra=None, context=None, by_alias=None, by_name=None):
+    #     print(f"[DEBUG] PermitData raw JSON: {json_data!r}")
+    #     return super().model_validate_json(json_data, strict=strict, extra=extra, context=context, by_alias=by_alias, by_name=by_name)
 
     application_id: Annotated[str | None, Field(
         description="The unique identifier for the building permit application.")]
@@ -48,10 +53,11 @@ class ComplianceResult(BaseModel):
     # Forbid extra fields to ensure strict adherence to the schema
     # model_config = ConfigDict(extra="forbid")
 
-    @classmethod
-    def model_validate_json(cls, json_data, *, strict=None, extra=None, context=None, by_alias=None, by_name=None):
-        print(f"[DEBUG] ComplianceResult raw JSON: {json_data!r}")
-        return super().model_validate_json(json_data, strict=strict, extra=extra, context=context, by_alias=by_alias, by_name=by_name)
+    # Uncomment this to see the raw JSON being validated, which can be helpful for debugging issues with the LLM's output not matching the expected schema
+    # @classmethod
+    # def model_validate_json(cls, json_data, *, strict=None, extra=None, context=None, by_alias=None, by_name=None):
+    #     print(f"[DEBUG] ComplianceResult raw JSON: {json_data!r}")
+    #     return super().model_validate_json(json_data, strict=strict, extra=extra, context=context, by_alias=by_alias, by_name=by_name)
 
     compliant: Annotated[bool, Field(
         description="Whether the building permit application is compliant with the relevant building codes.")]
@@ -66,7 +72,9 @@ class ContractorApprovalResponse(BaseModel):
         description="The name of the contractor being evaluated.")]
 
 
-MODEL = "openai/gpt-oss-120b:ovhcloud"
+# Note: the model AND model provider determine if the model allows for tool calls and structured output
+# MODEL = "openai/gpt-oss-120b:ovhcloud"
+MODEL = "openai/gpt-oss-120b:nscale"
 
 
 @executor()
@@ -161,6 +169,7 @@ class ContractorApproval(Executor):
         if validated_input.approved:
             permit_data_with_approval = PermitDataWithContractorApproval(
                 **permit_data.model_dump(), contractor_approved=True)
+            # await ctx.send_message(input.with_text(permit_data_with_approval.model_dump_json())) # use this approach if we want to preserve the conversation history
             await ctx.send_message(permit_data_with_approval.model_dump_json())
         else:
             await ctx.request_info(
@@ -168,7 +177,6 @@ class ContractorApproval(Executor):
                 response_type=str
             )
 
-    # LEFT-OFF: this is failing when attempting to send the permit data with contractor approval to the next agent in the workflow.s
     @response_handler
     async def on_human_response(
         self,
@@ -210,7 +218,7 @@ def create_compliance_agent():
         tools=[],
         context_providers=[skills_provider],
         default_options={
-            "model": "openai/gpt-oss-120b:cerebras",
+            "model": MODEL,
             "response_format": ComplianceResult,
         },
     )
@@ -239,16 +247,19 @@ def create_workflow():
 async def process_event_stream(stream: ResponseStream[WorkflowEvent[Any], WorkflowRunResult]):
     responses: dict[str, str] = {}
     requests: dict[str, str] = {}
+    output: str = ""
     async for event in stream:
-        if event.type == "request_info":
-            requests[event.request_id] = extract_request_from_event(event)
-        elif event.type == "output":
-            output = extract_response_from_event(event)
-            # The output of the sequential workflow is a list of ChatMessages
-            print("\n" + "=" * 60)
-            print("WORKFLOW COMPLETE")
-            print("=" * 60)
-            print(f"Final output: {output}")
+        match event:
+            case WorkflowEvent(type='request_info'):
+                requests[event.request_id] = extract_request_from_event(event)
+            case WorkflowEvent(type='output', executor_id='building_permit_compliance_agent'):
+                output += extract_response_from_event(event)
+            case WorkflowEvent(type='executor_completed', executor_id='contractor_approval_executor'):
+                output += extract_response_from_event(event)
+            case _:
+                pass
+    if output:
+        print(f"Agent response:\n\n{output}\n")
 
     for request_id, request_data in requests.items():
         agent_request = request_data
@@ -268,19 +279,10 @@ async def main(file: str):
         stream = wf.run(stream=True, responses=pending_responses)
         pending_responses = await process_event_stream(stream)
 
-    # if event.type == "request_info" and is_agent_executor_response(event.data):
-    #     print(f"Received request info event with data: {event.data}")
-    #     if event.type == "output" and is_agent_response_update(event.data):
-    #         print(event.data)
-    #         # Note: it is common for several empty data.text events to be received while the LLM prepares a response.
-    #         if event.data.text:
-    #             agent_response += event.data.text
-    # print(f"Final agent response:\n\n")
-    # print(agent_response)
-
 if __name__ == "__main__":
     load_dotenv()
-    file = "samples/use-cases/one/files/permit_app_005.pdf"
+    # file = "samples/use-cases/one/files/permit_app_005.pdf"
+    file = "samples/use-cases/one/files/permit_app_002.pdf"
     asyncio.run(main(file))
 
 
@@ -329,3 +331,7 @@ if __name__ == "__main__":
     selection_func=intelligent_router,  # Returns list of target IDs
 )
 """
+
+# TODO: do a manual workflow build instead of the orchestrator
+# TODO: figure out all of the events being passed around and how to plug into them
+# TODO: figure out what makes the events different from the telemetry
