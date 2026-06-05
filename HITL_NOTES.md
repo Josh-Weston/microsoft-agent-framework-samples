@@ -81,3 +81,71 @@ In the case of an agent, the response is packaged as a message that is added to 
 ## Functional API (Experimental)
 
 The functional API is an alternative approach to creating workflows. It allows for writing more concise, procedural workflows instead of using the graph based (classes and declarative patterns). It appears to have all of the functionality of the builder API, but shouldn't be used in production until no longer experimental.
+
+## with_request_info()
+
+**Note:** The agent doesn't decide to use this. The framework automatically pauses for human input **before** the agent receives the conversations.
+
+Enable request info before agents run in the workflow.
+
+When enabled, the workflow pauses before each agent runs, emitting a RequestInfoEvent that allows the caller to review the conversation and optionally inject guidance before the agent responds. The caller provides input via the standard response_handler/request_info pattern.
+
+```
+   # Pause before all agents
+   workflow = SequentialBuilder().participants([a1, a2]).with_request_info().build()
+
+   # Pause only before specific agents
+   workflow = (
+       SequentialBuilder()
+       .participants([drafter, reviewer, finalizer])
+       .with_request_info(agents=[reviewer])  # Only pause before reviewer
+       .build()
+   )
+```
+
+**Note:** For a SequentialBuilder, it is a one-way street. There is no way to "re-run" a previous agent based on HITL feedback. For a "loop-back" approach, I would need to use a manual graph and conditionals to loop back to
+the previous node.
+
+`AgentRequestInfoResponse.approve()` is the same as skipping; it adds no notes to the existing conversation that is passed downstream.
+
+Manual approach (without with_request_info): https://github.com/microsoft/agent-framework/blob/main/python/samples/03-workflows/human-in-the-loop/agents_with_HITL.py
+Automatic approach (with with_request_info): https://github.com/microsoft/agent-framework/blob/main/python/samples/03-workflows/human-in-the-loop/sequential_request_info.py
+
+#### Limitation of with_request_info() for response_format
+
+See this issue: https://github.com/microsoft/agent-framework/issues/6366
+
+When you **don't** use `with_request_info()`, the response_format is enforced by the LLM provider:
+
+- Pre-flight: the framework takes that schema and injects it into the actual API payload sent to the provider.
+- Post-flight: the framework uses "lazy evaluation" and relies entirely on the LLM provider's server-side enforcement.
+
+When you **do** use `with_request_info()`, the same steps as above happens, but then the framework runs its own evaluation as
+per below. The framework enforces the `response_format` provided to the agent.
+
+See the file `agent_framework/_types.py` for `ChatResponse` class.
+
+```
+@property
+def text(self) -> str:
+    """Returns the concatenated text of all messages in the response."""
+    return ("\n".join(message.text for message in self.messages if isinstance(message, Message))).strip()
+
+@property
+def value(self) -> ResponseModelT | None:
+    """Get the parsed structured output value.
+
+    If a response_format was provided and parsing hasn't been attempted yet,
+    this will attempt to parse the text into the specified type.
+
+    Raises:
+        ValidationError: If the response text doesn't match the expected schema.
+        ValueError: If the response text is not valid JSON for a non-Pydantic structured format.
+    """
+    if self._value_parsed:
+        return self._value
+    if self._response_format is not None:
+        self._value = cast(ResponseModelT, _parse_structured_response_value(self.text, self._response_format))
+        self._value_parsed = True
+    return self._value
+```
