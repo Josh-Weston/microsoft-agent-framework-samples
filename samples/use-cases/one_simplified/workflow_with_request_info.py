@@ -1,7 +1,8 @@
+from agent_framework import AgentResponse
 from pypdf import PdfReader
 from dotenv import load_dotenv
 from pydantic import BaseModel, ConfigDict, Field, model_validator
-from typing import Annotated, Any, Never
+from typing import Annotated, Any, Never, cast
 import asyncio
 import pathlib
 import os
@@ -49,15 +50,15 @@ class ComplianceResult(BaseModel):
     # model_config = ConfigDict(extra="forbid")
 
     # Uncomment this to see the raw JSON being validated, which can be helpful for debugging issues with the LLM's output not matching the expected schema
-    @classmethod
-    def model_validate_json(cls, json_data, *, strict=None, extra=None, context=None, by_alias=None, by_name=None):
-        print(f"[DEBUG] ComplianceResult raw JSON: {json_data!r}")
-        return super().model_validate_json(json_data, strict=strict, extra=extra, context=context, by_alias=by_alias, by_name=by_name)
+    # @classmethod
+    # def model_validate_json(cls, json_data, *, strict=None, extra=None, context=None, by_alias=None, by_name=None):
+    #     print(f"[DEBUG] ComplianceResult raw JSON: {json_data!r}")
+    #     return super().model_validate_json(json_data, strict=strict, extra=extra, context=context, by_alias=by_alias, by_name=by_name)
 
-    @classmethod
-    def model_validate(cls, obj: Any, *, strict: bool | None = None, extra=None, by_alias=None, by_name=None, from_attributes: bool | None = None, context: Any | None = None):
-        print(f"[DEBUG] ComplianceResult raw Dict: {obj!r}")
-        return super().model_validate(obj, strict=strict, extra=extra, by_alias=by_alias, by_name=by_name, from_attributes=from_attributes, context=context)
+    # @classmethod
+    # def model_validate(cls, obj: Any, *, strict: bool | None = None, extra=None, by_alias=None, by_name=None, from_attributes: bool | None = None, context: Any | None = None):
+    #     print(f"[DEBUG] ComplianceResult raw Dict: {obj!r}")
+    #     return super().model_validate(obj, strict=strict, extra=extra, by_alias=by_alias, by_name=by_name, from_attributes=from_attributes, context=context)
 
     compliant: Annotated[bool, Field(
         description="Whether the building permit application is compliant with the relevant building codes.")]
@@ -140,7 +141,20 @@ async def handle_compliance_decision(
     """
     handle_compliance_decision handles the compliance decision made by the agent and sends the result back to the workflow context.
     """
-    await ctx.yield_output("Compliance decision received. Do you approve this decision? (y/N)")
+    if isinstance(original_request.agent_response.value, ComplianceResult):
+        # Note: casting here is the only way to narrow the value for the ComplianceResult type
+        compliance_result = cast(
+            ComplianceResult, original_request.agent_response.value)
+        if compliance_result.compliant:
+            await ctx.yield_output("The building permit application is compliant with the relevant building codes. Do you approve this decision? (y/N)")
+        else:
+            reasons = "\n".join(
+                f"- {reason}" for reason in compliance_result.reasons)
+            await ctx.yield_output(f"The building permit application is NOT compliant with the relevant building codes for the following reasons:\n{reasons}\nDo you approve this decision? (y/N)")
+
+    # print("Inside of handler for compliance decision")
+    # print(original_request)
+    # await ctx.yield_output("Compliance decision received. Do you approve this decision? (y/N)")
     # try:
     #     # await ctx.send_message(f"Compliance decision for request: {original_request}")
     # except Exception as e:
@@ -153,13 +167,15 @@ def create_workflow():
     return (
         SequentialBuilder(
             participants=[read_pdf, data_agent,
-                          compliance_agent],
+                          compliance_agent, handle_compliance_decision],
             chain_only_agent_responses=True,
         )
-        # .with_request_info(agents=[compliance_agent])
+        # .with_request_info(agents=[handle_compliance_decision])
         .build()
     )
 
+
+# LEFT-OFF: the pieces are here for the simplified workflow, but I am not sure how to actually incorporate HITL without the verbosity.
 
 async def process_event_stream(stream: ResponseStream[WorkflowEvent[Any], WorkflowRunResult]):
     responses: dict[str, str] = {}
@@ -169,7 +185,7 @@ async def process_event_stream(stream: ResponseStream[WorkflowEvent[Any], Workfl
         match event:
             case WorkflowEvent(type='request_info'):
                 requests[event.request_id] = extract_request_from_event(event)
-            case WorkflowEvent(type='output', executor_id='building_permit_compliance_agent'):
+            case WorkflowEvent(type='output', executor_id='handle_compliance_decision'):
                 output += extract_response_from_event(event)
             case _:
                 pass
@@ -199,56 +215,3 @@ if __name__ == "__main__":
     # file = "samples/use-cases/one/files/permit_app_005.pdf"
     file = "samples/use-cases/one/files/permit_app_002.pdf"
     asyncio.run(main(file))
-
-
-# LEFT-OFF: test the conditionals, which allow for branching logic
-"""
-   workflow = (
-        WorkflowBuilder(start_executor=spam_detection_agent)
-        # Not spam path: transform response -> request for assistant -> assistant -> send email
-        .add_edge(spam_detection_agent, to_email_assistant_request, condition=get_condition(False))
-        .add_edge(to_email_assistant_request, email_assistant_agent)
-        .add_edge(email_assistant_agent, handle_email_response)
-        # Spam path: send to spam handler
-        .add_edge(spam_detection_agent, handle_spam_classifier_response, condition=get_condition(True))
-        .build()
-    )
-"""
-
-# switch-case for cleaner three-way routing
-"""
-    workflow = (
-        WorkflowBuilder(start_executor=store_email)
-        .add_edge(store_email, spam_detection_agent)
-        .add_edge(spam_detection_agent, to_detection_result)
-        .add_switch_case_edge_group(
-            to_detection_result,
-            [
-                # Explicit cases for specific decisions
-                Case(condition=get_case("NotSpam"), target=submit_to_email_assistant),
-                Case(condition=get_case("Spam"), target=handle_spam),
-                # Default case catches anything that doesn't match above
-                Default(target=handle_uncertain),
-            ],
-        )
-        .add_edge(submit_to_email_assistant, email_assistant_agent)
-        .add_edge(email_assistant_agent, finalize_and_send)
-        .build()
-    )
-"""
-
-# Multiselection pattern
-"""
-# One input → one or more outputs (dynamic fan-out)
-.add_multi_selection_edge_group(
-    source,
-    [handler_a, handler_b, handler_c, handler_d],
-    selection_func=intelligent_router,  # Returns list of target IDs
-)
-"""
-
-# LEFT-OFF: I need to better understand how to use .with_request_info()
-# LEFT-OFF: See t
-# TODO: do a manual workflow build instead of the orchestrator
-# TODO: figure out all of the events being passed around and how to plug into them
-# TODO: figure out what makes the events different from the telemetry
