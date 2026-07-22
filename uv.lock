@@ -8,7 +8,7 @@ resolution-markers = [
 
 [[package]]
 name = "agent-framework-core"
-version = "1.8.0"
+version = "1.12.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "opentelemetry-api" },
@@ -16,47 +16,47 @@ dependencies = [
     { name = "python-dotenv" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/b2/ce/bf1d238f70c198962bf261474dc7743ba8a936f8b67a6217667121b7c402/agent_framework_core-1.8.0.tar.gz", hash = "sha256:2fe2010bf42c53333f9fd0c740189ebb9a5c60d977354e9e0c6834fc80591e35", size = 413304, upload-time = "2026-06-04T23:50:46.393Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/0e/6a/dcf7b852d04ff93eca16b2ca61f265feb7589821b35aec755228c4816e1e/agent_framework_core-1.12.0.tar.gz", hash = "sha256:4be4c4a14647b1d4a5e2532598a49e455fd14900fb71034feee67863545cc50e", size = 507606, upload-time = "2026-07-21T19:50:28.675Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/2b/7b/c99d1ca77074322456fa2b29465d3f6bb1e33e1ea5e18a7d19117c9a3ec8/agent_framework_core-1.8.0-py3-none-any.whl", hash = "sha256:942b791abe9de99b604d9586e6558fa45dd527bd2ee0c7702ae03ab5f171ff08", size = 458586, upload-time = "2026-06-04T23:56:18.411Z" },
+    { url = "https://files.pythonhosted.org/packages/fc/34/f7e7bf4daa4406aec08fca7920edd25faf865e2a8663fb2537189380a6bc/agent_framework_core-1.12.0-py3-none-any.whl", hash = "sha256:71716a2c109b7ca89aaa221796876dc7166fed741d3fa75c967f8f24d02c6ead", size = 563147, upload-time = "2026-07-21T19:49:52.506Z" },
 ]
 
 [[package]]
 name = "agent-framework-ollama"
-version = "1.0.0b260521"
+version = "1.0.0b260721"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "agent-framework-core" },
     { name = "ollama" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/b6/0f/b322f583832902fd398fd634314eed41d2a8e2ee7c5ff43b14657b0e7648/agent_framework_ollama-1.0.0b260521.tar.gz", hash = "sha256:80041cae1220ce6cc8774985e37f4810e12fd2d732da81304aa500da57c3bafa", size = 10236, upload-time = "2026-05-22T02:23:45.387Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/bb/08/6e6d6f87d5069afee30ba2fbb377316762d91dc26cbcf98914f2aa0e47de/agent_framework_ollama-1.0.0b260721.tar.gz", hash = "sha256:460e67f6ca81ec022d7418a6b104ae490db692c6c994bbebcc670cd2fd9bbe34", size = 10730, upload-time = "2026-07-21T19:50:40.883Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/ec/d9/1b42ad94685ca3b10eda8ab9be18ad4f165a4850eb2407e8510601df655f/agent_framework_ollama-1.0.0b260521-py3-none-any.whl", hash = "sha256:a8db4794f97ca313603cb7b7b100bfd5179a05c57d6381a8dd159370b2c523c0", size = 12046, upload-time = "2026-05-22T02:24:23.833Z" },
+    { url = "https://files.pythonhosted.org/packages/1e/c0/42136076d4bc14d8863aecde4af59a3c3c0f6ce125356143302ab3cb872b/agent_framework_ollama-1.0.0b260721-py3-none-any.whl", hash = "sha256:b1915ba4282fbe288a853bbb9b6fc7f266e77bf63eac5fe8c9c92aeae5f67051", size = 12526, upload-time = "2026-07-21T19:50:11.472Z" },
 ]
 
 [[package]]
 name = "agent-framework-openai"
-version = "1.8.0"
+version = "1.10.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "agent-framework-core" },
     { name = "openai" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/b2/20/3574333e1837252f35703ba2fb63e6e66b7446b44fd23206d981aa97c1a5/agent_framework_openai-1.8.0.tar.gz", hash = "sha256:4397aa6f2ba4b630e8190fb3293ffdee0b1a08164b2cf36385a3d7afbf5f96ab", size = 51302, upload-time = "2026-06-04T23:55:59.801Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/b4/82/00afd5e179166aa939d2c19aa45382509f130903dfa993868b1271b174f3/agent_framework_openai-1.10.2.tar.gz", hash = "sha256:b3d3c0388b01171190e78f5756887ad9f682cc28228368302b7228a1073b669c", size = 53980, upload-time = "2026-07-21T19:50:41.457Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/af/0b/f03a97a82966aacc7bc7e6c70714f6259cfcd2f0d691c47dad9b6cd464de/agent_framework_openai-1.8.0-py3-none-any.whl", hash = "sha256:7a1af114576f0736bdee53696dafb884e288a686f42a9e679cebe02b222ab04b", size = 56223, upload-time = "2026-06-04T23:56:02.571Z" },
+    { url = "https://files.pythonhosted.org/packages/d4/45/bec51bc980d7b30ce2bc25a7475f118edb8287b39bf904ba24f1ed356f1e/agent_framework_openai-1.10.2-py3-none-any.whl", hash = "sha256:4f889a7e7b4c97563f1395f2f637dd2f3c6e4342b92c8e5fd6230a71b0f2c0d5", size = 58974, upload-time = "2026-07-21T19:50:12.376Z" },
 ]
 
 [[package]]
 name = "agent-framework-orchestrations"
-version = "1.0.0rc3"
+version = "1.0.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "agent-framework-core" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/44/5e/1da480a78fda2910eb908c559c627ce9496a7b8a5b6e980043cbec0b0f95/agent_framework_orchestrations-1.0.0rc3.tar.gz", hash = "sha256:5144d04b65c1fa3e405690e2dcf05b5c9723fd003b85530ee6ac3c76b81c20d8", size = 60906, upload-time = "2026-06-04T23:56:10.699Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/ca/e7/e6a123b74995bba5eaa9e4491e2db3cf94ebd8508df0abefffdec3f86468/agent_framework_orchestrations-1.0.1.tar.gz", hash = "sha256:8441488edb1512d50e0ca70e0bee3ae87a023636cbe860b57b80103b4bac50ec", size = 61003, upload-time = "2026-07-21T19:50:42.112Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/d0/17/7dc2d3b85a487606a09baf217699d4c44d26e959be64fb69fcade5ae610c/agent_framework_orchestrations-1.0.0rc3-py3-none-any.whl", hash = "sha256:3fd171d2923f2c3cc3393335f2f84808b1ba3841345a9e0c73ab584662d20379", size = 66853, upload-time = "2026-06-04T23:56:11.608Z" },
+    { url = "https://files.pythonhosted.org/packages/47/5d/a662a69014881e5ee593b39f64b97c0d34fc036c333eab73e9bc10019308/agent_framework_orchestrations-1.0.1-py3-none-any.whl", hash = "sha256:eb10454d462728ab83db14ba42d2c870f58d536966b9b60b525e5e504aa7e8c9", size = 67069, upload-time = "2026-07-21T19:50:13.408Z" },
 ]
 
 [[package]]
@@ -604,18 +604,6 @@ wheels = [
 ]
 
 [[package]]
-name = "importlib-metadata"
-version = "8.7.1"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "zipp" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/f3/49/3b30cad09e7771a4982d9975a8cbf64f00d4a1ececb53297f1d9a7be1b10/importlib_metadata-8.7.1.tar.gz", hash = "sha256:49fef1ae6440c182052f407c8d34a68f72efc36db9ca90dc0113398f2fdde8bb", size = 57107, upload-time = "2025-12-21T10:00:19.278Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/fa/5e/f8e9a1d23b9c20a551a8a02ea3637b4642e22c2626e3a13a9a29cdea99eb/importlib_metadata-8.7.1-py3-none-any.whl", hash = "sha256:5a1f80bf1daa489495071efbb095d75a634cf28a8bc299581244063b53176151", size = 27865, upload-time = "2025-12-21T10:00:18.329Z" },
-]
-
-[[package]]
 name = "ipykernel"
 version = "7.2.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1067,16 +1055,16 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
-    { name = "agent-framework-core", specifier = "==1.8.0" },
-    { name = "agent-framework-ollama", specifier = "==1.0.0b260521" },
-    { name = "agent-framework-openai", specifier = "==1.8.0" },
-    { name = "agent-framework-orchestrations", specifier = "==1.0.0rc3" },
+    { name = "agent-framework-core", specifier = "==1.12.0" },
+    { name = "agent-framework-ollama", specifier = "==1.0.0b260721" },
+    { name = "agent-framework-openai", specifier = "==1.10.2" },
+    { name = "agent-framework-orchestrations", specifier = "==1.0.1" },
     { name = "aiohttp", specifier = ">=3.13.5" },
     { name = "httpx", specifier = ">=0.28.1" },
     { name = "ipykernel", specifier = ">=7.2.0" },
     { name = "notebook", specifier = ">=7.5.5" },
-    { name = "opentelemetry-api", specifier = ">=1.39.1" },
-    { name = "opentelemetry-sdk", specifier = ">=1.39.1" },
+    { name = "opentelemetry-api", specifier = "==1.44.0" },
+    { name = "opentelemetry-sdk", specifier = "==1.44.0" },
     { name = "pypdf", specifier = ">=6.7.5" },
     { name = "reportlab", specifier = ">=4.5.1" },
 ]
@@ -1297,42 +1285,41 @@ wheels = [
 
 [[package]]
 name = "opentelemetry-api"
-version = "1.39.1"
+version = "1.44.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "importlib-metadata" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/97/b9/3161be15bb8e3ad01be8be5a968a9237c3027c5be504362ff800fca3e442/opentelemetry_api-1.39.1.tar.gz", hash = "sha256:fbde8c80e1b937a2c61f20347e91c0c18a1940cecf012d62e65a7caf08967c9c", size = 65767, upload-time = "2025-12-11T13:32:39.182Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/ee/8b/aa9e2d8b8dfa7c946f7dec5d1f8f6ba8eca062f43509a06bdb5ce93d26c0/opentelemetry_api-1.44.0.tar.gz", hash = "sha256:67647e5e9566edcf421166fdf022b3537f818635daa852b289e34604dc6fb33a", size = 72406, upload-time = "2026-07-16T15:25:32.678Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/cf/df/d3f1ddf4bb4cb50ed9b1139cc7b1c54c34a1e7ce8fd1b9a37c0d1551a6bd/opentelemetry_api-1.39.1-py3-none-any.whl", hash = "sha256:2edd8463432a7f8443edce90972169b195e7d6a05500cd29e6d13898187c9950", size = 66356, upload-time = "2025-12-11T13:32:17.304Z" },
+    { url = "https://files.pythonhosted.org/packages/ca/6f/a04e900f465ff3221ccc395522503e2d10e79fa21f2723c8e177aae1e0d1/opentelemetry_api-1.44.0-py3-none-any.whl", hash = "sha256:94b98c893a91b88657eaac1e3ba89618cdb85be6918196705354f34728b2cdef", size = 60018, upload-time = "2026-07-16T15:25:11.657Z" },
 ]
 
 [[package]]
 name = "opentelemetry-sdk"
-version = "1.39.1"
+version = "1.44.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "opentelemetry-api" },
     { name = "opentelemetry-semantic-conventions" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/eb/fb/c76080c9ba07e1e8235d24cdcc4d125ef7aa3edf23eb4e497c2e50889adc/opentelemetry_sdk-1.39.1.tar.gz", hash = "sha256:cf4d4563caf7bff906c9f7967e2be22d0d6b349b908be0d90fb21c8e9c995cc6", size = 171460, upload-time = "2025-12-11T13:32:49.369Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/5d/77/a6592cbc7c8d9bcc9d6757a9df45e04a7c585e3e6e7a13456da522b21109/opentelemetry_sdk-1.44.0.tar.gz", hash = "sha256:cebe7f65dc12f26ead75c6064de12fd2a9052e5060c0272d402cfa203aae123b", size = 208624, upload-time = "2026-07-16T15:25:46.078Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/7c/98/e91cf858f203d86f4eccdf763dcf01cf03f1dae80c3750f7e635bfa206b6/opentelemetry_sdk-1.39.1-py3-none-any.whl", hash = "sha256:4d5482c478513ecb0a5d938dcc61394e647066e0cc2676bee9f3af3f3f45f01c", size = 132565, upload-time = "2025-12-11T13:32:35.069Z" },
+    { url = "https://files.pythonhosted.org/packages/e7/23/ff077e61886ee020a17ce9c8b6fa11c601c8d8345b09ea24f605445df62a/opentelemetry_sdk-1.44.0-py3-none-any.whl", hash = "sha256:df081c4c6bcfdb1211e3e86140376792643128a25f8d72d1d27675936e7e96ad", size = 137221, upload-time = "2026-07-16T15:25:29.534Z" },
 ]
 
 [[package]]
 name = "opentelemetry-semantic-conventions"
-version = "0.60b1"
+version = "0.65b0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "opentelemetry-api" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/91/df/553f93ed38bf22f4b999d9be9c185adb558982214f33eae539d3b5cd0858/opentelemetry_semantic_conventions-0.60b1.tar.gz", hash = "sha256:87c228b5a0669b748c76d76df6c364c369c28f1c465e50f661e39737e84bc953", size = 137935, upload-time = "2025-12-11T13:32:50.487Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/8f/73/0cbdebcb4cf545fdd328da14f5137e37d0770c3f26185e478b0d15d94f50/opentelemetry_semantic_conventions-0.65b0.tar.gz", hash = "sha256:f9b2b81e9d5b64f11bc952075e7e9c7fb0aab075c7fd1c46d597f1b919852d60", size = 148774, upload-time = "2026-07-16T15:25:46.902Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/7a/5e/5958555e09635d09b75de3c4f8b9cae7335ca545d77392ffe7331534c402/opentelemetry_semantic_conventions-0.60b1-py3-none-any.whl", hash = "sha256:9fa8c8b0c110da289809292b0591220d3a7b53c1526a23021e977d68597893fb", size = 219982, upload-time = "2025-12-11T13:32:36.955Z" },
+    { url = "https://files.pythonhosted.org/packages/a6/0e/49df70d9b81fb5cbae4bbf2a49d865b09bcbcbc4eb53f5851b1027738d78/opentelemetry_semantic_conventions-0.65b0-py3-none-any.whl", hash = "sha256:1cacde7b0ad306f84c5ef08c3dbe1bbaf20165bba6f8bff43b670e555a086bcb", size = 204645, upload-time = "2026-07-16T15:25:30.688Z" },
 ]
 
 [[package]]
@@ -2231,13 +2218,4 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/e1/19/3774d162f6732d1cfb0b47b4140a942a35ca82bb19b6db1f80e9e7bdc8f8/yarl-1.23.0-cp314-cp314t-win_amd64.whl", hash = "sha256:4503053d296bc6e4cbd1fad61cf3b6e33b939886c4f249ba7c78b602214fabe2", size = 97610, upload-time = "2026-03-01T22:07:45.773Z" },
     { url = "https://files.pythonhosted.org/packages/51/47/3fa2286c3cb162c71cdb34c4224d5745a1ceceb391b2bd9b19b668a8d724/yarl-1.23.0-cp314-cp314t-win_arm64.whl", hash = "sha256:44bb7bef4ea409384e3f8bc36c063d77ea1b8d4a5b2706956c0d6695f07dcc25", size = 86041, upload-time = "2026-03-01T22:07:49.026Z" },
     { url = "https://files.pythonhosted.org/packages/69/68/c8739671f5699c7dc470580a4f821ef37c32c4cb0b047ce223a7f115757f/yarl-1.23.0-py3-none-any.whl", hash = "sha256:a2df6afe50dea8ae15fa34c9f824a3ee958d785fd5d089063d960bae1daa0a3f", size = 48288, upload-time = "2026-03-01T22:07:51.388Z" },
-]
-
-[[package]]
-name = "zipp"
-version = "3.23.0"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/e3/02/0f2892c661036d50ede074e376733dca2ae7c6eb617489437771209d4180/zipp-3.23.0.tar.gz", hash = "sha256:a07157588a12518c9d4034df3fbbee09c814741a33ff63c05fa29d26a2404166", size = 25547, upload-time = "2025-06-08T17:06:39.4Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/2e/54/647ade08bf0db230bfea292f893923872fd20be6ac6f53b2b936ba839d75/zipp-3.23.0-py3-none-any.whl", hash = "sha256:071652d6115ed432f5ce1d34c336c0adfd6a884660d1e9712a256d3d3bd4b14e", size = 10276, upload-time = "2025-06-08T17:06:38.034Z" },
 ]

@@ -176,6 +176,7 @@ def create_workflow():
 
 
 # LEFT-OFF: the pieces are here for the simplified workflow, but I am not sure how to actually incorporate HITL without the verbosity.
+# LEFT-OFF: the with_request_info() will be fixed with a PR that is going through soon
 
 async def process_event_stream(stream: ResponseStream[WorkflowEvent[Any], WorkflowRunResult]):
     responses: dict[str, str] = {}

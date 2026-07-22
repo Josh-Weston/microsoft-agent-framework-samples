@@ -5,16 +5,16 @@ description = "A repository of sample code for the Microsoft Agent Framework."
 readme = "README.md"
 requires-python = ">=3.13.5"
 dependencies = [
-    "agent-framework-core==1.8.0",
-    "agent-framework-ollama==1.0.0b260521",
-    "agent-framework-openai==1.8.0",
-    "agent-framework-orchestrations==1.0.0rc3",
+    "agent-framework-core==1.12.0",
+    "agent-framework-ollama==1.0.0b260721",
+    "agent-framework-openai==1.10.2",
+    "agent-framework-orchestrations==1.0.1",
     "aiohttp>=3.13.5",
     "httpx>=0.28.1",
     "ipykernel>=7.2.0",
     "notebook>=7.5.5",
-    "opentelemetry-api>=1.39.1",
-    "opentelemetry-sdk>=1.39.1",
+    "opentelemetry-api==1.44.0",
+    "opentelemetry-sdk==1.44.0",
     "pypdf>=6.7.5",
     "reportlab>=4.5.1",
 ]
