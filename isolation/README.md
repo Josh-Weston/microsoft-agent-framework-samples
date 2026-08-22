@@ -70,6 +70,52 @@ workspace.stop()
 workspace.remove()
 ```
 
+### (Good) Non-root user
+
+```python
+workspace = client.containers.run(
+    "python:3.11-slim",
+    command="tail -f /dev/null", 
+    detach=True,
+    mem_limit="512m",       
+    network_disabled=True,
+    user="1000:1000",       # Run as an arbitrary unprivileged user (UID 1000, GID 1000)
+    working_dir="/tmp"      # Use /tmp as it is globally writable by default
+)
+```
+
+### (Better) Non-root user (isolated to custom directory)
+
+```python
+# Pre-create the /app directory and grant ownership to UID 1000
+workspace.exec_run("mkdir -p /app && chown -R 1000:1000 /app")
+
+agent_command = "mkdir -p /app/test && echo 'print(\"Hello Agent\")' > /app/script.py && python /app/script.py"
+
+# Send the instruction to the container as the non-root user
+exit_code, output = workspace.exec_run(
+    f"bash -c '{agent_command}'",
+    user="1000:1000",
+    workdir="/app"
+)
+```
+
+### (Best) Read-Only Root
+
+```python
+workspace = client.containers.run(
+    "python:3.11-slim",
+    command="tail -f /dev/null", 
+    detach=True,
+    mem_limit="512m",       
+    network_disabled=True,
+    read_only=True,                     # Locks down the entire OS filesystem
+    tmpfs={'/tmp': '', '/run': ''},     # Keeps required temp directories writable
+    volumes={'/host/path/to/app': {'bind': '/app', 'mode': 'rw'}} # Only /app is writable
+)
+```
+
+
 ### How to prevent the agent from executing arbitrary commands
 
 Attempting to filter or allowlist raw bash commands is a well-known anti-pattern in agent engineering. Bash is simply too expressive—if you try to block the rm command using regex, a hallucinating agent (or a malicious prompt injection) can bypass it entirely using hex encoding, variables, or base64 decoding (e.g., $(echo cm0gLXJmIC8= | base64 -d)).
@@ -106,3 +152,7 @@ Here is how the Microsoft Agent Framework handles the assets automatically:
 - Tool Approval Middleware: Because arbitrary file access and script execution carry security risks, MAF wraps these implicit tools in a Tool Approval Middleware. By default, tools that read resources might be auto-approved (via ReadOnlyToolsAutoApprovalRule), but executing your Python/Bash scripts requires explicit approval configuration before the agent can run them.  
 
 Instead of writing custom execute_bash or read_file tools, you simply initialize the provider:
+
+## Gotchas
+
+- If file-based skills with scripts are provided but no script_runner is set, SkillsProvider raises an error when script execution is attempted.

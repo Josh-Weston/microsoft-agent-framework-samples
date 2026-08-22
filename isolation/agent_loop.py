@@ -3,7 +3,7 @@ from sandbox import AgentSandbox
 
 def run_agent_session():
     # 1. The 'with' statement automatically triggers __enter__() to boot the container
-    with AgentSandbox(image="python:3.11-slim") as sandbox:
+    with AgentSandbox(image="python:3.14-slim") as sandbox:
         print("Sandbox ready. Starting agent loop...\n")
 
         # --- Turn 1: Agent writes a file ---
@@ -28,3 +28,6 @@ def run_agent_session():
 
 if __name__ == "__main__":
     run_agent_session()
+
+
+# LEFT-OFF: docker is now working properly. Can now start testing agent ability to run scripts

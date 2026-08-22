@@ -1,6 +1,6 @@
 import json
 import openai  # Or anthropic, etc.
-from sandbox import AgentSandbox
+from skills.sandbox import AgentSandbox
 
 
 def run_agent(user_prompt: str):

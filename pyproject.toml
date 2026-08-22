@@ -10,6 +10,7 @@ dependencies = [
     "agent-framework-openai==1.12.0",
     "agent-framework-orchestrations==1.0.2",
     "aiohttp>=3.13.5",
+    "docker>=7.2.0",
     "httpx>=0.28.1",
     "ipykernel>=7.2.0",
     "notebook>=7.6.2",
