@@ -29,5 +29,3 @@ def run_agent_session():
 if __name__ == "__main__":
     run_agent_session()
 
-
-# LEFT-OFF: docker is now working properly. Can now start testing agent ability to run scripts
