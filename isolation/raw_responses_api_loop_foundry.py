@@ -1,37 +1,6 @@
 """
-If you are interacting directly with the Responses API and dealing with the raw ResponseOutputItem Pydantic models,
-you cannot pass them directly back into the API because the input expects strictly validated dictionaries,
-not Python objects.
-
-Note: this manual process is time-consuming and error-prone.
-
-The following models won't work without fist parsing them into a dictionary and stripping away the extra fields that the Responses API doesn't accept:
-- openai/gpt-oss-120b
-
-The following models will work:
-- 
-
-Why gpt-oss-120b reasoning doesn't work:
-Open Responses is an open-source extension of OpenAI's original Responses API.
-To support multi-turn agentic loops, tool executions, and visibility into thinking states,
-it streams a series of custom item types (such as reasoning data blocks). 
-
-Why Gemma4 reasoning doesn't work:
-
-When routing through Hugging Face Inference Providers (like Together AI, DeepInfra, Cerebras, etc.), your request is intercepted by a unified abstraction layer.
-Because this serverless router completely strips extra_body arguments before sending the payload to the provider, your parameters are ignored.
-
-Note: it is the inference provider's responsibility to implement the Responses API, and not all providers support the full spec. It is
-the model provider's responsibility to train the model to output tokens that can be parsed into the Responses API's expected schema. Models can output
-different delimiter tokens (e.g., <think>, <reason>, <tool>, etc.) that the provider must parse into the correct Responses API item types.
-
-HuggingFace's Responses API is a partial implementation of OpenAI's Responses API (it's a translation layer):
-- https://github.com/huggingface/responses.js
-- https://huggingface.co/docs/inference-providers/en/guides/responses-api
-- https://huggingface.co/docs/inference-providers/en/guides/gpt-oss
-
+Using Foundry + GPT model with a responses loop is much easier than using HuggingFace.
 """
-
 
 import asyncio
 import json
@@ -40,13 +9,13 @@ from typing import cast
 from sandbox import AgentSandbox
 from agent_framework import tool
 from agent_framework.openai import OpenAIChatClient  # Responses API
+from azure.identity import DefaultAzureCredential
 from openai.types.responses import ResponseInputItemParam, FunctionToolParam
 from typing import Annotated
 from pydantic import BaseModel, Field
 from dotenv import load_dotenv
 
 load_dotenv()
-
 
 class BashResponse(BaseModel):
     exit_code: Annotated[str, Field(
@@ -82,11 +51,18 @@ execute_bash_schema: FunctionToolParam = cast(FunctionToolParam, {
 
 async def run_loop(user_prompt: str):
 
-    MODEL = os.getenv("HF_API_MODEL", "openai/gpt-oss-120b:baseten")
+    base_url = os.getenv("AZURE_OPENAI_BASE_URL")
+    if not base_url:
+        raise ValueError("AZURE_OPENAI_BASE_URL environment variable is not set.")
+
+    model = os.getenv("AZURE_MODEL")
+    if not model:
+        raise ValueError("AZURE_MODEL environment variable is not set.")
+
     openai_client = OpenAIChatClient(
-        base_url=os.getenv("HF_API_BASE_URL"),
-        api_key=os.getenv("HF_API_KEY"),
-        model=MODEL,
+        model=model,
+        base_url=base_url,
+        credential=DefaultAzureCredential()
     )
 
     # Boot the stateful container
@@ -94,7 +70,6 @@ async def run_loop(user_prompt: str):
 
         # Initialize the conversation history
         messages: list[ResponseInputItemParam] = [
-            {"role": "system", "content": "You are an AI assistant. Use the bash tool to solve user requests."},
             {"role": "user", "content": user_prompt},
         ]
 
@@ -104,23 +79,25 @@ async def run_loop(user_prompt: str):
         final_response = False
         # 3. The ReAct (Reason + Act) Loop
         while max_iterations > 0:
+
             # Ask the LLM what to do next
+            # response = await openai_client.client.responses.create(
             response = await openai_client.client.responses.create(
-                model=MODEL,
-                instructions="Use the available tools to answer the user's questions. If an error occurs, try again.",
+                model=model,
+                instructions="You are an AI assistant. Use the bash tool to solve user requests. First try to write the bash command to a script and execute it. If an error occurs, try again by running the python interpreter directly. Return the final answer is pirate speak",
                 input=conversation,
                 tools=[execute_bash_schema],
             )
 
-            # if response.error:
-            #     with open('final_answer.txt', '+wt') as f:
-            #         f.write(str(conversation))
-            #     raise Exception(f"Error from the LLM: {response.error}")
+            if response.error:
+                with open('final_answer.txt', 'w', encoding='utf-8') as f:
+                    f.write(str(conversation))
+                raise Exception(f"Error from the LLM: {response.error}")
 
-            # if not response.output:
-            #     with open('final_answer.txt', '+wt') as f:
-            #         f.write(str(conversation))
-            #     raise Exception("No output from the LLM. The model may have failed to respond.")
+            if not response.output:
+                with open('final_answer.txt', 'w', encoding='utf-8') as f:
+                    f.write(str(conversation))
+                raise Exception("No output from the LLM. The model may have failed to respond.")
 
             tool_calls = []
 
@@ -185,13 +162,9 @@ async def run_loop(user_prompt: str):
             max_iterations -= 1
 
         # View the conversation thread
-        with open('final_answer.txt', '+wt') as f:
+        with open('final_answer.txt', 'w', encoding='utf-8') as f:
             f.write(str(conversation))
 
 # Usage:
 asyncio.run(run_loop(
     "Use your available tools to calculate the 10th Fibonacci number. Respond with the calculated number"))
-
-# LEFT-OFF: determine if the HF Responses API does actually support the previous_responses.id API
-# LEFT-OFF: convert the function_call and function_call_output to regular outputs
-# LEFT-OFF: this has been interesting, but once the above are fixed, MOVE ON WITH YOUR LIFE!

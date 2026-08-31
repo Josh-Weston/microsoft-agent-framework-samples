@@ -1,0 +1,5 @@
+Function call: {"command":"cat << 'EOF' > fib.sh\n#!/usr/bin/env bash\npython - << 'PY'\na, b = 0, 1\nfor _ in range(10):\n    a, b = b, a + b\nprint(a)\nPY\nEOF\nbash fib.sh"}
+Function result: {"exit_code": "127", "output": "bash: line 1: fib.sh: Permission denied\nbash: fib.sh: No such file or directory"}
+Function call: {"command":"python - << 'PY'\na, b = 0, 1\nfor _ in range(10):\n    a, b = b, a + b\nprint(a)\nPY"}
+Function result: {"exit_code": "0", "output": "55"}
+Text: Arrr, the 10th Fibonacci number be **55**.
