@@ -1,5 +1,12 @@
 """
 Using Foundry + GPT model with a responses loop is much easier than using HuggingFace.
+
+Note: the framework loop equivalent to my manual responses loop is found in:
+
+C:\Users\JOSHUAS\dev\josh-weston\microsoft-agent-framework-samples\.venv\Lib\site-packages\agent_framework\_tools.py
+
+Look for the `for attempt_idx in range(attempt_start, max_iterations):` loop in the `_tools.py` file.
+
 """
 
 import asyncio
@@ -101,4 +108,4 @@ async def run_loop(user_prompt: str):
 asyncio.run(run_loop(
     "Use your available tools to calculate the 10th Fibonacci number. Respond with the calculated number"))
 
-# TODO: How does the agent's loop work? How does it know to end the conversation without me programming it to?
+# TODO: This is working as expected, now to create even more robust solution using the isolation environment
