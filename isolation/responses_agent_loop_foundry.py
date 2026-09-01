@@ -1,7 +1,7 @@
 """
 Using Foundry + GPT model with a responses loop is much easier than using HuggingFace.
 
-Note: the framework loop equivalent to my manual responses loop is found in:
+Note: the framework loop is similiar to my manual responses loop is found in:
 
 C:\Users\JOSHUAS\dev\josh-weston\microsoft-agent-framework-samples\.venv\Lib\site-packages\agent_framework\_tools.py
 
@@ -107,5 +107,3 @@ async def run_loop(user_prompt: str):
 # Usage:
 asyncio.run(run_loop(
     "Use your available tools to calculate the 10th Fibonacci number. Respond with the calculated number"))
-
-# TODO: This is working as expected, now to create even more robust solution using the isolation environment

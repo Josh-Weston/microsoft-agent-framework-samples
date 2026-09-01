@@ -1,0 +1,4 @@
+- Writing multiple files into the /workspace
+- Writing multiple files to a disk mounted (and secured) directory
+- Reading scripts from the mounted /scripts directory
+- Staying "alive" with the workspace and disk mount as its short-term and long-term memory
