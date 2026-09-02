@@ -102,16 +102,13 @@ async def run_loop(user_prompt: str):
             ),
             tools=[execute_bash, write_file],
         )
+        # Note: the agent will send a single output with multiple tool_calls to the tools defined above.
+        # This way, the tools can be executed in parallel if needed.
         response = await agent.run(user_prompt)
-        print("\n".join([get_message(item.contents) for item in response.messages]))
+        with open('full_output.txt', 'w', encoding='utf-8') as f:
+            f.write(get_full_output([c for item in response.messages for c in item.contents]))
 
 # Usage:
 asyncio.run(run_loop(
-    "Create an HTML file for a simple website"
-    # "Create the following empty files: index.html, styles.css, script.js"
-    # "Create the following files: test.txt, index.html, styles.css, script.js"
+    "Create the files for a simple website: index.html, styles.css, script.js. When finished, just respond with 'done'."
 ))
-
-
-# LEFT-OFF: turned off content filters and is now working
-# LEFT-OFF: determining if I still need write_file or the base64 encoding logic now that it is working?

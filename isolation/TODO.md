@@ -1,4 +1,4 @@
-- Writing multiple files into the /workspace
-- Writing multiple files to a disk mounted (and secured) directory
 - Reading scripts from the mounted /scripts directory
+- Writing multiple files to a disk mounted (and secured) directory
 - Staying "alive" with the workspace and disk mount as its short-term and long-term memory
+- Add a SKILL.md for the scripts which describes what they do and what arguments they expect

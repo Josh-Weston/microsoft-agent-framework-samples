@@ -3,7 +3,7 @@ Using Foundry + GPT model with a responses loop is much easier than using Huggin
 
 Note: the framework loop is similiar to my manual responses loop is found in:
 
-C:\Users\JOSHUAS\dev\josh-weston\microsoft-agent-framework-samples\.venv\Lib\site-packages\agent_framework\_tools.py
+.venv\Lib\site-packages\agent_framework\_tools.py
 
 Look for the `for attempt_idx in range(attempt_start, max_iterations):` loop in the `_tools.py` file.
 

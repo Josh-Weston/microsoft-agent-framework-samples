@@ -180,8 +180,8 @@ class AgentSandbox:
             raise RuntimeError("Sandbox is not running.")
 
         resolved_path = self._resolve_within_workdir(path)
-        encoded = base64.b64encode(content.encode("utf-8")).decode("ascii")
-        command = f"base64 -d > {shlex.quote(resolved_path)} <<< {shlex.quote(encoded)}"
+        encoded = base64.b64encode(content.encode("utf-8")).decode("ascii") # Turn the content into a base64-encoded ASCII string to safely pass through the shell
+        command = f"base64 -d > {shlex.quote(resolved_path)} <<< {shlex.quote(encoded)}" # Decode the base64 content back to original byte stream (utf-8) and write it to the resolved path
         return self.execute(command)
 
     def __exit__(self, exc_type, exc_val, exc_tb):
