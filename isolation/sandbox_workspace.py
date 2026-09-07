@@ -1,3 +1,8 @@
+"""
+- Agent has a virtual /workspace where it can do work in the container
+- Agent has read access to a mounted /scripts directory where it can execute scripts from
+"""
+
 import base64
 import docker
 import logging
@@ -188,8 +193,8 @@ class AgentSandbox:
         """Ensures the container is destroyed when the session ends or crashes."""
         if self.container:
             logging.info("Tearing down sandbox container...")
-            # self.container.stop(timeout=2)  # Force fast stop
-            # self.container.remove(force=True) 
+            self.container.stop(timeout=2)  # Force fast stop
+            self.container.remove(force=True) 
             self.container = None
 
 

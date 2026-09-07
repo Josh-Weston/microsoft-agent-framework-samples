@@ -156,3 +156,10 @@ Instead of writing custom execute_bash or read_file tools, you simply initialize
 ## Gotchas
 
 - If file-based skills with scripts are provided but no script_runner is set, SkillsProvider raises an error when script execution is attempted.
+
+
+## Responses Text Reasoning Protected Data
+
+It exists purely so the conversation can continue statelessly across turns without OpenAI storing your conversation server-side: the model's actual internal reasoning trace gets encrypted with a key only OpenAI holds, and you're expected to just pass that blob back unchanged on the next request (the SDK does this for you automatically). OpenAI intentionally never exposes the raw chain-of-thought to developers — that's a deliberate product/safety decision, same as with o1/o3/gpt-5-family reasoning models generally.
+
+You're note supposed to be able to read it.

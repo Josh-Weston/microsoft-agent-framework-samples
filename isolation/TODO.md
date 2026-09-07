@@ -1,4 +1,3 @@
-- Reading scripts from the mounted /scripts directory
-- Writing multiple files to a disk mounted (and secured) directory
 - Staying "alive" with the workspace and disk mount as its short-term and long-term memory
-- Add a SKILL.md for the scripts which describes what they do and what arguments they expect
+- Use a script runnner with our docker sandbox responses_agent_loop_foundry_workspace_scripts_mounted.py to isolate scripts hosted in the skills directory
+- Stash the agent's chain-of-thought so it can refer back to it

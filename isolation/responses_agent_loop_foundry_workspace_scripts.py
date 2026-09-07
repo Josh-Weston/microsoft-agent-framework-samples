@@ -63,7 +63,15 @@ def get_full_output(contents: list[Content]) -> str:
     if not contents:
         return ""
 
-    return "\n".join(str(c.to_dict()) for c in contents)
+    dicts = []
+    for c in contents:
+        d = c.to_dict()
+        # protected_data is OpenAI's encrypted reasoning payload, not human-readable; drop it from logs
+        if d.get("protected_data"):
+            d["protected_data"] = f"<redacted, {len(d['protected_data'])} chars>"
+        dicts.append(d)
+
+    return "\n".join(str(d) for d in dicts)
 
 async def run_loop(user_prompt: str):
 
@@ -120,5 +128,3 @@ asyncio.run(run_loop(
     # "Run a script that prints a message to the user."
     'Run a script that reverses the text "Hello, from MAF"'
 ))
-
-# LEFT-OFF : Added reasoning step; look into the next evolution of this.
