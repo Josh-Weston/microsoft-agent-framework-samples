@@ -1,4 +1,4 @@
-from agent_framework import Agent
+from agent_framework import Agent, ContextProvider
 from agent_framework._clients import SupportsChatGetResponse
 from agent_framework.openai import OpenAIChatClient, OpenAIChatCompletionClient, OpenAIChatOptions
 from agent_framework.gemini import GeminiChatClient
@@ -21,23 +21,27 @@ def new_openai_responses_client():
         model=os.getenv("FOUNDRY_MODEL"),
     )
 
-def _create_openai_agent(client: SupportsChatGetResponse[OpenAIChatOptions[None]], name: str, description: str, instructions: str):
+def _create_openai_agent(client: SupportsChatGetResponse[OpenAIChatOptions[None]], name: str, description: str, instructions: str, context_providers: list[ContextProvider] = []):
     return Agent(
         client=client,
         name=name,
         description=description,
         instructions=instructions,
         tools=[],
-        context_providers=[],
+        context_providers=context_providers,
     )
 
-def new_base_openai_responses_agent(name: str, description: str, instructions: str):
+def new_base_openai_responses_agent(name: str, description: str, instructions: str, context_providers: list[ContextProvider] = []):
     chat_client = new_openai_responses_client()
-    return _create_openai_agent(chat_client, name, description, instructions)
+    agent = _create_openai_agent(chat_client, name, description, instructions, context_providers)
+    agent.context_providers = context_providers
+    return agent
 
-def new_base_openai_completion_agent(name: str, description: str, instructions: str):
+def new_base_openai_completion_agent(name: str, description: str, instructions: str, context_providers: list[ContextProvider] = []):
     chat_client = new_openai_completion_client()
-    return _create_openai_agent(chat_client, name, description, instructions)
+    agent = _create_openai_agent(chat_client, name, description, instructions, context_providers)
+    agent.context_providers = context_providers
+    return agent
 
 def new_base_gemini_agent(name: str, description: str, instructions: str):
 
