@@ -22,6 +22,7 @@ dependencies = [
     "opentelemetry-api==1.45.2",
     "opentelemetry-sdk==1.45.2",
     "pypdf>=6.7.5",
+    "pytest==9.2.0",
     "reportlab>=4.5.1",
 ]
 

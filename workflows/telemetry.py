@@ -1,5 +1,6 @@
 import json
 from collections.abc import Callable, Sequence
+import os
 
 from agent_framework.observability import configure_otel_providers
 from opentelemetry.sdk.trace import ReadableSpan
@@ -14,7 +15,6 @@ from opentelemetry.sdk.metrics.export import (
     MetricExportResult,
     MetricsData,
 )
-
 
 def configure_ipc_telemetry(send: Callable[[bytes], None]) -> None:
     def publish(signal: str, records: list[str]) -> None:
