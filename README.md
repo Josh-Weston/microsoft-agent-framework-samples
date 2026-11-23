@@ -6,6 +6,10 @@
 
 [2026 Python Significant Changes](https://learn.microsoft.com/en-us/agent-framework/support/upgrade/python-2026-significant-changes#python-100)
 
+# Good documentation with examples
+
+https://codehalwell.github.io/AgentGuides/microsoft-agent-framework-guide/python/microsoft_agent_framework_python_tools/
+
 # Running samples
 
 `uv run samples/agents_chat_completion.py`
