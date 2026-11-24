@@ -334,11 +334,11 @@ if True:
 ## Captured Metrics
 
 - For the chat client and chat operations:
-  - **gen_ai.client.operation.duration (histogram)**: This metric measures the duration of each operation, in seconds.
-  - **gen_ai.client.token.usage (histogram)**: This metric measures the token usage, in number of tokens.
+    - **gen_ai.client.operation.duration (histogram)**: This metric measures the duration of each operation, in seconds.
+    - **gen_ai.client.token.usage (histogram)**: This metric measures the token usage, in number of tokens.
 
 - For function invocation during the execute_tool operations:
-  - **agent_framework.function.invocation.duration (histogram)**: This metric measures the duration of each function execution, in seconds.
+    - **agent_framework.function.invocation.duration (histogram)**: This metric measures the duration of each function execution, in seconds.
 
 # Agent Types
 
